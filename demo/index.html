@@ -123,6 +123,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .stage[data-stage=dark] { background: var(--stage-dark); }
 @media (prefers-color-scheme: dark) { .stage[data-stage=auto] { background: var(--stage-dark); } }
 .stage > .aai, .stage > div { max-width: 100%; }
+.stage[data-layout=menu] { overflow: visible; align-items: flex-start; min-height: 380px; }
 .box-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .box-h small { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .promptbox pre { margin: 0; padding: 12px; white-space: pre-wrap; word-break: break-word; font-size: 13px; line-height: 1.5; max-height: 240px; overflow: auto; }
@@ -155,8 +156,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .gvar h4 { margin: 0 0 8px; font-size: 14px; }
 .gcells { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 12px; }
 .gcell { display: grid; gap: 6px; justify-items: start; }
-.gcell button { font: 11px var(--mono); color: inherit; opacity: .55; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.gcell button:hover { opacity: 1; }
+.gcell > button { font: 11px var(--mono); color: inherit; opacity: .55; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.gcell > button:hover { opacity: 1; }
 .gpanel :focus-visible { outline-color: #6ea0ff; }
 
 /* events */
@@ -200,8 +201,8 @@ footer p { margin: 0 0 6px; max-width: 80ch; }
     <h1>Add "Ask AI about this page" in one tag</h1>
     <p class="lead">A tiny button row that opens ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral or DeepSeek with a prefilled prompt. No backend, no tracking, no dependencies.</p>
     <ul class="badges" aria-label="Facts">
-      <li><b>9.18 kB</b> gzip (CDN build)</li>
-      <li><b>6.25 kB</b> gzip with the lite entry + 2 logos</li>
+      <li><b>11.06 kB</b> gzip (CDN build)</li>
+      <li><b>8.14 kB</b> gzip with the lite entry + 2 logos</li>
       <li><b>0</b> runtime dependencies</li>
       <li><b>7</b> services</li>
       <li>HTML, React, Vue, Svelte</li>
@@ -233,6 +234,9 @@ footer p { margin: 0 0 6px; max-width: 80ch; }
           <div class="field"><span class="l">Shape <small>shape</small></span><div class="seg" data-key="shape" data-opts="circle,rounded,square"></div></div>
           <div class="field"><span class="l">Size <small>size</small></span><div class="seg" data-key="size" data-opts="sm,md,lg"></div></div>
           <div class="field"><span class="l">Theme <small>theme</small></span><div class="seg" data-key="theme" data-opts="light,dark,auto"></div></div>
+          <div class="field"><span class="l">Layout <small>layout</small></span><div class="seg" data-key="layout" data-opts="row,menu"></div></div>
+          <div class="field" id="f-menualign" hidden><span class="l">Menu align <small>menuAlign</small></span><div class="seg" data-key="menuAlign" data-opts="start,end"></div></div>
+          <div class="field" id="f-menuicons" hidden><span class="l">Trigger icons <small>menuIcons</small></span><div class="seg" data-key="menuIcons" data-opts="stack,none"></div></div>
           <label class="check"><input type="checkbox" id="showLabels"> Show service names <small style="color:var(--muted)">showLabels</small></label>
         </fieldset>
 
@@ -298,7 +302,7 @@ footer p { margin: 0 0 6px; max-width: 80ch; }
 <section id="gallery" aria-labelledby="h-gal">
   <div class="wrap">
     <h2 id="h-gal">Gallery</h2>
-    <p class="sub">Every variant in every shape, on light and dark backgrounds. Click a caption to load that combination into the playground.</p>
+    <p class="sub">Every variant in every shape, plus the dropdown menu layout, on light and dark backgrounds. Click a caption to load that combination into the playground.</p>
     <div class="gal" id="gal"></div>
   </div>
 </section>
@@ -378,7 +382,7 @@ const VARS = [
 ];
 const fresh = () => ({
   order: KEYS.slice(), on: new Set(KEYS),
-  label: "Ask AI about this page", variant: "soft", shape: "circle", size: "md", theme: "light", showLabels: false,
+  label: "Ask AI about this page", variant: "soft", shape: "circle", size: "md", theme: "light", layout: "row", menuAlign: "start", menuIcons: "stack", showLabels: false,
   mode: "prompt", placeholder: "", prompt: "", instructions: "", ctxMode: "default", ctx: "", refs: "",
   lite: false,
   vars: Object.fromEntries(VARS.map((v) => [v.id, { on: false, v: v.def }])),
@@ -407,14 +411,19 @@ function entries(lite) {
   if (S.shape !== "circle") e.push(["shape", S.shape]);
   if (S.size !== "md") e.push(["size", S.size]);
   if (S.theme !== "light") e.push(["theme", S.theme]);
+  if (S.layout === "menu") {
+    e.push(["layout", "menu"]);
+    if (S.menuAlign !== "start") e.push(["menuAlign", S.menuAlign]);
+    if (S.menuIcons !== "stack") e.push(["menuIcons", S.menuIcons]);
+  }
   if (S.showLabels) e.push(["showLabels", true]);
   return e;
 }
-const OPT_KEYS = ["services", "label", "input", "prompt", "instructions", "context", "references", "variant", "shape", "size", "theme", "showLabels"];
+const OPT_KEYS = ["services", "label", "input", "prompt", "instructions", "context", "references", "variant", "shape", "size", "theme", "layout", "menuAlign", "menuIcons", "showLabels"];
 
 /** Real options for the live widget (defaults filled in explicitly so update() can reset removed ones). */
 function liveOptions() {
-  const o = { variant: S.variant, shape: S.shape, size: S.size, theme: S.theme, showLabels: S.showLabels, services: enabled(), label: S.label.trim() || undefined };
+  const o = { variant: S.variant, shape: S.shape, size: S.size, theme: S.theme, layout: S.layout, menuAlign: S.menuAlign, menuIcons: S.menuIcons, showLabels: S.showLabels, services: enabled(), label: S.label.trim() || undefined };
   if (S.mode === "input") o.input = S.placeholder.trim() ? { placeholder: S.placeholder } : true;
   if (S.prompt.trim()) o.prompt = S.prompt;
   if (S.instructions.trim()) o.instructions = S.instructions;
@@ -595,8 +604,8 @@ function refreshCode() {
   $("#t-css").hidden = !hasCss;
   if (!hasCss && $("#t-css").getAttribute("aria-selected") === "true") selectTab("html");
   $("#codenote").textContent = lite
-    ? "Lite imports only the logos you name: 6.25 kB gzip with 2 services versus 7.68 kB for the default entry. String keys do not resolve in lite, so pass the service objects."
-    : "The HTML tab loads the CDN build (9.18 kB gzip, all 7 logos). The ESM, React, Vue and Svelte tabs import the npm package.";
+    ? "Lite imports only the logos you name: 8.14 kB gzip with 2 services versus 9.57 kB for the default entry. String keys do not resolve in lite, so pass the service objects."
+    : "The HTML tab loads the CDN build (11.06 kB gzip, all 7 logos). The ESM, React, Vue and Svelte tabs import the npm package.";
 }
 
 function selectTab(id) {
@@ -614,6 +623,8 @@ function sync() {
   if (!inst) inst = AskAI.mount(prev, clean(o)); else inst.update(resetKeys(clean(o)));
   applyVars();
   $("#stage").dataset.stage = S.theme;
+  $("#stage").dataset.layout = S.layout;
+  $("#f-menualign").hidden = $("#f-menuicons").hidden = S.layout !== "menu";
   $("#f-placeholder").hidden = S.mode !== "input";
   $("#ctx").hidden = S.ctxMode !== "custom";
   $("#prompt").placeholder = S.mode === "input" ? "{question}" : "Explain this page.";
@@ -733,6 +744,23 @@ function buildGallery() {
       });
       p.append(v);
     });
+    const m = document.createElement("div");
+    m.className = "gvar";
+    m.innerHTML = `<h4>dropdown menu</h4><div class="gcells"></div>`;
+    [["soft", "stack"], ["outline", "stack"], ["brand", "none"]].forEach(([variant, menuIcons]) => {
+      const c = document.createElement("div"); c.className = "gcell";
+      const w = document.createElement("div");
+      const b = document.createElement("button"); b.type = "button"; b.textContent = `${variant} · menu`;
+      b.title = "Load into the playground";
+      b.addEventListener("click", () => {
+        S.variant = variant; S.layout = "menu"; S.menuIcons = menuIcons; S.theme = theme; pushState(); sync();
+        $("#playground").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      });
+      c.append(w, b);
+      $(".gcells", m).append(c);
+      AskAI.mount(w, { services: GAL, variant, theme, layout: "menu", menuIcons });
+    });
+    p.append(m);
     root.append(p);
   });
 }

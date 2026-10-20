@@ -1,5 +1,6 @@
 import type { AskAIOptions, Instance } from "./types";
-import { builtinInput, firstChar, getItems, rootAttrs, str } from "./model";
+import { CHEVRON, builtinInput, firstChar, getItems, isMenu, menuLabel, rootAttrs, stackItems, str } from "./model";
+import { bindMenu } from "./menu";
 import { resolveServices } from "./registry";
 import { activate, getInput, readQuestion } from "./open";
 import { injectStyles } from "./styles";
@@ -16,6 +17,13 @@ function el(tag: string, attrs: Record<string, string> = {}, text?: string): HTM
 }
 
 const instances = new WeakMap<HTMLElement, Instance>();
+let seq = 0;
+const svg = (d: string, attrs: Record<string, string>) => {
+  const s = el("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false", ...attrs });
+  s.append(el("path", { d }));
+  return s;
+};
+const icon = (d: string) => svg(d, { class: "aai__icon", fill: "currentColor", "fill-rule": "evenodd" });
 
 /** Maps raw options to the ones the renderer uses (`withRegistry` in lite, `withBuiltins` in the default entries). */
 export type Normalize = (opts: AskAIOptions) => AskAIOptions;
@@ -29,6 +37,7 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
   const origClasses = new Set(Array.from(root.classList));
   let added: string[] = [];
   const origAttrs: Record<string, string | null> = {};
+  const uid = "aai-m" + ++seq;
   let ext: HTMLInputElement | HTMLTextAreaElement | null = null;
 
   const q = () => readQuestion(o, root);
@@ -50,8 +59,10 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
       root!.setAttribute(k, attrs[k]);
     }
     const prevQ = q();
+    menuCtl.close();
     root!.textContent = "";
-    if (o.label) root!.append(el("span", { class: "aai__label" }, o.label));
+    const menu = isMenu(o);
+    if (o.label && !menu) root!.append(el("span", { class: "aai__label" }, o.label));
     const inp = builtinInput(o);
     if (inp) {
       const i = el(inp.multiline ? "textarea" : "input", { class: "aai__input", "aria-label": str(o, "question") }) as HTMLInputElement;
@@ -62,20 +73,36 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
       f.append(i);
       root!.append(f);
     }
-    const list = el("div", { class: "aai__list", role: "group", "aria-label": o.label || "Ask AI" });
-    for (const it of getItems(o, q())) {
+    const all = getItems(o, q());
+    if (menu) {
+      const label = menuLabel(o), trig = el("button", { type: "button", class: "aai__trigger", "aria-haspopup": "menu", "aria-expanded": "false", "aria-controls": uid });
+      const stack = stackItems(o, all);
+      if (stack.length) {
+        const st = el("span", { class: "aai__stack", "aria-hidden": "true" });
+        for (const it of stack) {
+          const i = el("span", { class: `aai__stack-item aai__btn--${it.key}` });
+          if (it.color) i.style.setProperty("--aai-brand", it.color);
+          i.append(icon(it.icon!));
+          st.append(i);
+        }
+        trig.append(st);
+      }
+      trig.append(el("span", { class: "aai__trigger-label" }, label), svg(CHEVRON, { class: "aai__chevron" }));
+      root!.append(trig);
+    }
+    const list = el("div", menu
+      ? { class: "aai__list aai__menu", role: "menu", id: uid, "aria-label": menuLabel(o), hidden: "", ...(o.menuAlign === "end" ? { "data-align": "end" } : {}) }
+      : { class: "aai__list", role: "group", "aria-label": o.label || "Ask AI" });
+    for (const it of all) {
       const ask = str(o, "ask", it.label);
       const a = el("a", {
         class: `aai__btn aai__btn--${it.key}`, "data-service": it.key, href: it.href, target: "_blank", rel: "noopener noreferrer",
-        "aria-label": ask, title: ask,
+        ...(menu ? { role: "menuitem", tabindex: "-1" } : { "aria-label": ask, title: ask }),
       });
       if (it.color) a.style.setProperty("--aai-brand", it.color);
-      if (it.icon) {
-        const s = el("svg", { class: "aai__icon", viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false", fill: "currentColor", "fill-rule": "evenodd" });
-        s.append(el("path", { d: it.icon }));
-        a.append(s);
-      } else a.append(el("span", { class: "aai__name" }, firstChar(it.label)));
-      if (o.showLabels) a.append(el("span", { class: "aai__name" }, it.label));
+      if (it.icon) a.append(icon(it.icon));
+      else a.append(el("span", { class: "aai__name" }, firstChar(it.label)));
+      if (o.showLabels || menu) a.append(el("span", { class: "aai__name" }, it.label));
       list.append(a);
     }
     root!.append(list, el("div", { class: "aai__hint", role: "status", "aria-live": "polite" }));
@@ -114,6 +141,7 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
     ["submit", onSubmit], ["input", clearInvalid], ["keydown", onKey],
   ];
   on.forEach(([t, f]) => root.addEventListener(t, f));
+  const menuCtl = bindMenu(root);
   render();
 
   let dead = false;
@@ -130,6 +158,7 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
       dead = true;
       if (instances.get(root) === inst) instances.delete(root);
       on.forEach(([t, f]) => root.removeEventListener(t, f));
+      menuCtl.unbind();
       unbindExt();
       root.textContent = "";
       root.classList.remove(...added);

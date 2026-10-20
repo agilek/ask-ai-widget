@@ -55,6 +55,12 @@ import { claude, chatgpt } from "ask-ai-widget/services";
 mount("#ask-ai", { services: [claude, chatgpt] });
 ```
 
+Dropdown instead of a row:
+```html
+<ask-ai layout="menu" label="Ask AI" menu-align="end"></ask-ai>
+```
+JS: `mount("#w", { layout: "menu" })`; React `<AskAI layout="menu" />`; Vue `<AskAI layout="menu" />`; Svelte `use:askAI={{ layout: "menu" }}`.
+
 Let visitors type a question:
 ```html
 <ask-ai input placeholder="Ask about Acme"></ask-ai>
@@ -68,13 +74,14 @@ JS equivalents: `input: true`, `input: { placeholder, required, multiline }`, `i
 - `services` / `services="a,b"`: keys or ServiceDef objects, in display order. Default: all 7 built-ins. Keys: chatgpt, claude, perplexity, gemini, grok, mistral, deepseek (case-insensitive).
 - `label` / `label`: text before the buttons.
 - `variant` (soft|outline|solid|ghost|brand|custom name), `shape` (circle|rounded|square), `size` (sm|md|lg), `theme` (light|dark|auto; default light).
+- `layout` / `layout`: `row` (default) or `menu`. Menu = one "Ask AI" trigger button that opens a dropdown listing every service (logo + name); choosing one behaves like clicking it in the row. `label` is then the trigger text (default `strings.menu`, "Ask AI"). `menuAlign` / `menu-align` (`start` default | `end`). `menuIcons` / `menu-icons` (`stack` default: up to 3 overlapping logos in the trigger | `none`). CDN: `data-layout="menu"`. Keyboard: ArrowDown/Up/Enter/Space on the trigger, arrows/Home/End/type-ahead/Escape/Tab in the menu. Panel colors: `--aai-menu-bg`, `--aai-menu-fg`, `--aai-menu-border`, `--aai-menu-shadow`, `--aai-menu-radius`, `--aai-menu-z`.
 - `showLabels` / `show-labels`: boolean.
 - `prompt`, `instructions`, `context`, `template` / same-named attributes. Strings with `{question} {url} {title} {description} {selection} {service}` and any key of `vars`; or functions `(ctx) => string` (JS only). `context: false` / `context="none"` removes page context.
 - `references` / `references="/llms.txt, /docs"`: URLs the agent should read; relative URLs resolve against the page.
 - `vars` / `vars='{"k":"v"}'` (JSON), `page` / `page='{"url":"...","title":"..."}'` (JSON).
 - `maxLength` / `max-length`: default 4000 chars; too long: context is cut first, then references (whole lines), then instructions, and the prompt is hard-clipped last.
 - `input` / `input`, `placeholder`, `required`, `multiline` (`input="#q" required="false"` = bound field, empty allowed); `submitService` / `submit-service`.
-- `strings` / `strings='{"ask":"Frage {service}"}'` (JSON): translates the widget's own texts. Keys `ask` (button aria-label/title, default "Ask {service}"), `question` (input aria-label, default "Your question"), `copied` (clipboard hint, default "Prompt copied — paste it into {service}"). `{service}` = service label.
+- `strings` / `strings='{"ask":"Frage {service}"}'` (JSON): translates the widget's own texts. Keys `ask` (button aria-label/title, default "Ask {service}"), `question` (input aria-label, default "Your question"), `copied` (clipboard hint, default "Prompt copied — paste it into {service}"), `menu` (trigger text of the menu layout when no `label`, default "Ask AI"). `{service}` = service label.
 - `className` / `class-name`; `unstyled` / `unstyled`.
 - `onOpen(detail)` (JS property or prop only). Vue: `@open`. DOM event `ask-ai:open` (bubbles) with `detail = { service, prompt, url }`.
 - React-only props: `question`, `defaultQuestion`, `onQuestionChange`. Vue-only: `v-model:question`.
@@ -101,7 +108,7 @@ Custom: `registerService({ key, label, url, param, icon?, color?, prefill? })` o
 
 ## Styling hooks
 
-Root: `.aai` (the `<ask-ai>` element itself) with `data-variant`, `data-shape`, `data-size`, `data-theme`. Children: `.aai__label`, `.aai__form`, `.aai__input`, `.aai__list`, `.aai__btn` (also `.aai__btn--<key>` and `[data-service]`), `.aai__icon`, `.aai__name`, `.aai__hint`.
+Root: `.aai` (the `<ask-ai>` element itself) with `data-variant`, `data-shape`, `data-size`, `data-theme`, `data-layout`. Children: `.aai__label`, `.aai__form`, `.aai__input`, `.aai__list`, `.aai__btn` (also `.aai__btn--<key>` and `[data-service]`), `.aai__icon`, `.aai__name`, `.aai__hint`; menu layout: `.aai__trigger`, `.aai__trigger-label`, `.aai__stack`, `.aai__stack-item`, `.aai__chevron`, `.aai__menu` (also `.aai__list`).
 Override in 3 tiers: (1) set `--aai-*` anywhere; (2) target the classes: rules use one class plus at most one pseudo-class/attribute (specificity <= 0,2,0, no `!important`), so they beat `a {}` / `svg {}` resets and lose to any later class selector; (3) `unstyled` (skip the stylesheet). The `<style>` is prepended to `<head>`.
 Custom properties: `--aai-gap` (8px), `--aai-btn-size` (36px), `--aai-icon-size` (18px), `--aai-radius` (999px), `--aai-bg` (#f1f1f3), `--aai-bg-hover`, `--aai-fg` (#1a1a1a), `--aai-border`, `--aai-shadow`, `--aai-label-color`, `--aai-font`, `--aai-font-size`, `--aai-focus`, `--aai-transition`, `--aai-line`, `--aai-tint`, `--aai-input-bg`, `--aai-input-fg`, `--aai-brand` (set per button from the service color).
 Custom preset: add `.aai[data-variant="mine"] { --aai-bg: ...; --aai-fg: ...; }` and use `variant="mine"`.

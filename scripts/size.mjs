@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const root = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
-const LIMIT = 20480; // CDN IIFE budget, bytes (min)
+const LIMIT = 30720; // CDN IIFE budget, bytes (min)
 const MIN_SAVING = 2000; // (b) - (c): lite + 2 services must be at least this much smaller (min bytes)
 const gz = (b) => gzipSync(b, { level: 9 }).length;
 const fail = [];

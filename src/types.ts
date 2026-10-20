@@ -49,6 +49,8 @@ export interface Strings {
   question?: string;
   /** Hint announced after the prompt was copied to the clipboard. Default "Prompt copied — paste it into {service}". */
   copied?: string;
+  /** Default trigger text of the `menu` layout when no `label` is set. Default "Ask AI". */
+  menu?: string;
 }
 
 export type Variant = "soft" | "outline" | "solid" | "ghost" | "brand" | (string & {});
@@ -88,6 +90,16 @@ export interface AskAIOptions {
   shape?: Shape;
   size?: Size;
   theme?: Theme;
+  /**
+   * `row` (default): one button per service. `menu`: a single "Ask AI" trigger button that opens a dropdown menu
+   * listing every service (logo + name); choosing one behaves exactly like clicking its button in the row.
+   * In the menu layout `label` is the trigger text (default `strings.menu`, "Ask AI").
+   */
+  layout?: "row" | "menu";
+  /** Menu layout: which edge of the trigger the dropdown lines up with. Default "start". */
+  menuAlign?: "start" | "end";
+  /** Menu layout: show the first services' logos as an overlapping stack inside the trigger ("stack", default) or only the label ("none"). */
+  menuIcons?: "stack" | "none";
   /** Show the service name next to each logo. */
   showLabels?: boolean;
   /** Skip injecting default CSS. */

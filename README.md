@@ -4,7 +4,7 @@
 
 ![ask-ai-widget](docs/screenshot.png)
 
-[![gzip size](https://img.shields.io/badge/gzip-9.18%20kB-brightgreen)](#bundle-size)
+[![gzip size](https://img.shields.io/badge/gzip-11.06%20kB-brightgreen)](#bundle-size)
 [![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/types-included-3178c6)](#api-reference)
@@ -67,6 +67,7 @@ The same guide is published at [`llms.txt`](llms.txt), so agents that read llms.
 - [Two modes: predefined prompt or user question](#two-modes)
 - [Prompt composition](#prompt-composition)
 - [Services](#services)
+- [Dropdown menu](#dropdown-menu)
 - [Translations](#translations)
 - [Styling](#styling)
 - [Bundle size and tree-shaking](#bundle-size)
@@ -125,6 +126,9 @@ With a bundler, `import "ask-ai-widget/element";` registers the tag instead.
 | `shape` | `shape` | `circle` (default), `rounded`, `square` |
 | `size` | `size` | `sm`, `md` (default), `lg` |
 | `theme` | `theme` | `light` (default), `dark`, `auto` |
+| `layout` | `layout` | `row` (default) or `menu`, see [Dropdown menu](#dropdown-menu) |
+| `menu-align` | `menuAlign` | menu layout: `start` (default) or `end` |
+| `menu-icons` | `menuIcons` | menu layout: `stack` (default, logos in the trigger) or `none` |
 | `show-labels` | `showLabels` | boolean attribute |
 | `prompt` | `prompt` | template string, see [Prompt composition](#prompt-composition) |
 | `instructions` | `instructions` | template string placed before the prompt |
@@ -151,7 +155,7 @@ el.prompt = (ctx) => `Explain ${ctx.title} to a beginner`;
 el.onOpen = ({ service }) => console.log(service);
 ```
 
-No JS needed for a CDN page with several widgets either: `<div data-ask-ai data-services="claude,chatgpt"></div>` is auto-mounted with the same attribute grammar using a `data-` prefix (`data-show-labels`, `data-input`, ...). Call `AskAI.init()` after adding more to the DOM.
+No JS needed for a CDN page with several widgets either: `<div data-ask-ai data-services="claude,chatgpt"></div>` is auto-mounted with the same attribute grammar using a `data-` prefix (`data-show-labels`, `data-layout="menu"`, `data-input`, ...). Call `AskAI.init()` after adding more to the DOM.
 
 ### Vanilla JS
 
@@ -393,15 +397,91 @@ mount("#w", { services: ["claude", { key: "me", label: "My AI", url: "https://ai
 
 **Icon fallback.** A service without an `icon` renders the first character of its label in the circle (emoji-safe). With `showLabels` the letter is followed by the service name, like every other service (React, Vue and `mount` render the same).
 
+## Dropdown menu
+
+`layout: "menu"` replaces the row of logos with one **Ask AI** button. Clicking it opens a menu that lists every service (logo and name); choosing one does exactly what clicking its button in the row does: the required-question check, the clipboard fallback and hint for Gemini and DeepSeek, `onOpen`, the `ask-ai:open` event and `window.open`, all synchronous. Middle-click and Ctrl/Cmd-click on an item keep the browser's native link behaviour.
+
+```html
+<ask-ai layout="menu" services="chatgpt,claude,perplexity,gemini" label="Ask AI"></ask-ai>
+<!-- right-aligned menu, no logos in the trigger -->
+<ask-ai layout="menu" menu-align="end" menu-icons="none"></ask-ai>
+<!-- CDN auto-mount -->
+<div data-ask-ai data-layout="menu"></div>
+```
+
+```js
+import { mount } from "ask-ai-widget";
+mount("#w", { layout: "menu", label: "Ask AI", menuAlign: "end" });
+```
+
+```tsx
+import { AskAI } from "ask-ai-widget/react";
+<AskAI layout="menu" menuAlign="end" />
+```
+
+```vue
+<AskAI layout="menu" menu-align="end" />
+```
+
+```svelte
+<div use:askAI={{ layout: "menu", menuAlign: "end" }}></div>
+```
+
+| Option | Default | Notes |
+| --- | --- | --- |
+| `layout` | `"row"` | `"menu"` turns on the dropdown. Attribute `layout`, CDN `data-layout` |
+| `label` | `strings.menu`, else `"Ask AI"` | In the menu layout `label` is the trigger text (it is not rendered as a separate label). Also the accessible name of the menu |
+| `strings.menu` | `"Ask AI"` | Default trigger text when no `label` is set, so translated pages need no `label` |
+| `menuAlign` | `"start"` | `"end"` lines the menu up with the right edge of the trigger. Attribute `menu-align` |
+| `menuIcons` | `"stack"` | `"stack"` shows up to three overlapping logos (the first services that have an icon) in the trigger; `"none"` shows only the label and chevron. Attribute `menu-icons` |
+
+Menu items always show the service name. `showLabels` and `strings.ask` do not apply to them (the visible name is the accessible name). The built-in input still works: the field is rendered next to the trigger, and choosing a service with an empty required question closes the menu and focuses the field.
+
+**Keyboard.** On the trigger, ArrowDown, Enter or Space open the menu and focus the first item; ArrowUp opens it and focuses the last. In the menu, ArrowDown and ArrowUp move with wrap-around, Home and End jump to the ends, a letter jumps to the next item starting with it, Space or Enter activates, Escape closes and returns focus to the trigger, and Tab closes without trapping focus. A press outside the widget closes the menu. The menu is a `role="menu"` list of `role="menuitem"` links opened by a `<button aria-haspopup="menu" aria-expanded aria-controls>`.
+
+**Position.** The menu is absolutely positioned below the trigger (the root is `position: relative` in this layout). When it does not fit below the trigger and there is more room above, it flips above (`data-placement="top"` on the menu). The position is measured when the menu opens, so it does not follow a later resize or scroll. Open state lives in the DOM (`aria-expanded` and `hidden`), so React and Vue re-renders do not close it.
+
+Markup (identical in every renderer):
+
+```html
+<div class="aai" data-layout="menu" data-variant="soft" ...>
+  <button type="button" class="aai__trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="ID">
+    <span class="aai__stack" aria-hidden="true">
+      <span class="aai__stack-item aai__btn--claude" style="--aai-brand:#D97757"><svg class="aai__icon">...</svg></span>
+    </span>
+    <span class="aai__trigger-label">Ask AI</span>
+    <svg class="aai__chevron" aria-hidden="true">...</svg>
+  </button>
+  <div class="aai__list aai__menu" role="menu" id="ID" aria-label="Ask AI" hidden>
+    <a class="aai__btn aai__btn--claude" role="menuitem" tabindex="-1" data-service="claude" href="..."><svg class="aai__icon">...</svg><span class="aai__name">Claude</span></a>
+  </div>
+  <div class="aai__hint" role="status" aria-live="polite"></div>
+</div>
+```
+
+**Styling.** `variant`, `shape`, `size` and `theme` apply to the trigger like to the buttons, and the `--aai-bg`, `--aai-bg-hover`, `--aai-fg`, `--aai-border`, `--aai-radius`, `--aai-shadow` and `--aai-btn-size` properties work on it. `variant="brand"` colors the logos in the stack and in the menu. The panel has its own properties:
+
+| Property | Default (light / dark) | Purpose |
+| --- | --- | --- |
+| `--aai-menu-bg` | `#fff` / `#1c1c1e` | panel background |
+| `--aai-menu-fg` | `#1a1a1a` / `#f2f2f2` | item text color |
+| `--aai-menu-border` | `#d4d4d9` / `#46464c` | panel border color |
+| `--aai-menu-shadow` | `0 8px 24px rgba(0,0,0,.18)` | panel shadow |
+| `--aai-menu-radius` | `min(radius, 14px)` | panel radius (items use `min(radius, 10px)`) |
+| `--aai-menu-z` | `1000` | z-index |
+
+Hover and focus rows use `--aai-tint`. The panel is at least 200px wide. With `prefers-reduced-motion` the transitions are off.
+
 ## Translations
 
-The widget writes three texts itself. Override any of them with `strings`; `{service}` is replaced by the service label. Omitted keys keep the English default.
+The widget writes four texts itself. Override any of them with `strings`; `{service}` is replaced by the service label. Omitted keys keep the English default.
 
 | Key | Used for | Default |
 | --- | --- | --- |
 | `ask` | `aria-label` and `title` of each button | `Ask {service}` |
 | `question` | `aria-label` of the built-in question field | `Your question` |
 | `copied` | hint after the prompt was copied (Gemini, DeepSeek) | `Prompt copied — paste it into {service}` |
+| `menu` | trigger text of the [dropdown menu](#dropdown-menu) when no `label` is set | `Ask AI` |
 
 ```js
 mount("#w", { input: true, label: "Frag die KI", strings: { ask: "{service} fragen", question: "Deine Frage", copied: "Kopiert. Füge es in {service} ein." } });
@@ -411,7 +491,7 @@ mount("#w", { input: true, label: "Frag die KI", strings: { ask: "{service} frag
 <ask-ai label="Frag die KI" strings='{"ask":"{service} fragen","copied":"Kopiert. Füge es in {service} ein."}'></ask-ai>
 ```
 
-React and Vue take `strings` as a prop (`:strings` in Vue), Svelte as a key of the action options, the CDN auto-mount as `data-strings='{...}'`. The accessible name of the button group is your `label`.
+React and Vue take `strings` as a prop (`:strings` in Vue), Svelte as a key of the action options, the CDN auto-mount as `data-strings='{...}'`. The accessible name of the button group is your `label`; in the menu layout the trigger text is your `label`, else `strings.menu`.
 
 ## Styling
 
@@ -444,7 +524,7 @@ Rules that only set the private variables (variants, sizes, shapes, themes) are 
 
 ### CSS hooks
 
-The root has `class="aai"` (plus your `className`) and four data attributes. `<ask-ai>` itself is the root.
+The root has `class="aai"` (plus your `className`) and five data attributes (`data-variant`, `data-shape`, `data-size`, `data-theme`, `data-layout`). `<ask-ai>` itself is the root.
 
 | Selector | Element |
 | --- | --- |
@@ -455,7 +535,9 @@ The root has `class="aai"` (plus your `className`) and four data attributes. `<a
 | `[data-theme]` | `light` (default) / `dark` / `auto` (follows `prefers-color-scheme`) |
 | `.aai__label` | the label text |
 | `.aai__form`, `.aai__input` | built-in question form and field (`.aai__input[aria-invalid="true"]` when empty) |
-| `.aai__list` | wrapper of the buttons, `role="group"` |
+| `[data-layout]` | `row` (default) / `menu` |
+| `.aai__list` | wrapper of the buttons, `role="group"` (in the menu layout also `.aai__menu`, `role="menu"`) |
+| `.aai__trigger`, `.aai__trigger-label`, `.aai__stack`, `.aai__stack-item`, `.aai__chevron` | menu layout: the trigger button, its text, logo stack and chevron. The chevron rotates while the trigger has `aria-expanded="true"` |
 | `.aai__btn`, `.aai__btn--<key>`, `[data-service="<key>"]` | each button (an `<a>`) |
 | `.aai__icon` | the SVG logo |
 | `.aai__name` | service name (`showLabels`) or fallback letter |
@@ -464,7 +546,7 @@ The root has `class="aai"` (plus your `className`) and four data attributes. `<a
 Markup, identical in every renderer:
 
 ```html
-<div class="aai" data-variant="soft" data-shape="circle" data-size="md" data-theme="light">
+<div class="aai" data-variant="soft" data-shape="circle" data-size="md" data-theme="light" data-layout="row">
   <span class="aai__label">Ask AI about this page</span>
   <!-- with input: <form class="aai__form"><input class="aai__input" aria-label="Your question"></form> -->
   <div class="aai__list" role="group" aria-label="Ask AI about this page">
@@ -500,6 +582,7 @@ Set any of these anywhere (see [Styling](#styling)). They are never declared by 
 | `--aai-line` | `#d4d4d9` | input border, outline variant border |
 | `--aai-tint` | `rgba(0,0,0,.06)` | hover tint of `outline` and `ghost` |
 | `--aai-input-bg` / `--aai-input-fg` | `#fff` / `#1a1a1a` | built-in input colors |
+| `--aai-menu-bg`, `--aai-menu-fg`, `--aai-menu-border`, `--aai-menu-shadow`, `--aai-menu-radius`, `--aai-menu-z` | see [Dropdown menu](#dropdown-menu) | dropdown panel |
 | `--aai-brand` | set per button from the service `color` | color of logos in `variant="brand"` |
 
 Dark theme (`data-theme="dark"`, or `auto` with a dark OS) changes the defaults: `--aai-bg` to `#2a2a2e`, `--aai-bg-hover` to `#38383d`, `--aai-fg` to `#f2f2f2`, `--aai-label-color` to `#9a9aa0`, `--aai-line` to `#46464c`, `--aai-tint` to `rgba(255,255,255,.1)`, the input to `#1c1c1e` / `#f2f2f2`, and `--aai-focus` to `#6ea0ff`. `solid` is `#111` on white (inverted in dark); `outline` and `ghost` are transparent. Your own `--aai-*` values still win over all of these.
@@ -552,12 +635,12 @@ Measured with `npm run size` (esbuild, minified, target ES2019, bundled the way 
 
 | Bundle | min | min+gzip |
 | --- | ---: | ---: |
-| CDN build `dist/ask-ai.min.js` (all 7 logos, element, auto-mount) | 20,302 B | 9,183 B |
-| `mount` from `ask-ai-widget` (all 7 logos) | 16,968 B | 7,683 B |
-| `ask-ai-widget/element` | 19,090 B | 8,570 B |
-| React `AskAI` from `ask-ai-widget/react` | 16,874 B | 7,662 B |
-| **lite** `mount` + 2 logos (claude, chatgpt) | 14,054 B | 6,254 B |
-| **lite** React `AskAI` + 2 logos | 13,981 B | 6,234 B |
+| CDN build `dist/ask-ai.min.js` (all 7 logos, element, auto-mount) | 26,689 B | 11,064 B |
+| `mount` from `ask-ai-widget` (all 7 logos) | 23,327 B | 9,569 B |
+| `ask-ai-widget/element` | 25,479 B | 10,489 B |
+| React `AskAI` from `ask-ai-widget/react` | 23,351 B | 9,549 B |
+| **lite** `mount` + 2 logos (claude, chatgpt) | 20,413 B | 8,139 B |
+| **lite** React `AskAI` + 2 logos | 20,459 B | 8,098 B |
 
 The default entries bundle all seven logos (about 1.4 kB gzip more than two). To pay only for the ones you show, use the **lite** entries and import the service objects. Unused logos are tree-shaken:
 
@@ -615,21 +698,24 @@ All entries share the types below. Import them from any entry (`import type { As
 | `template` | `string` | `{instructions}\n\n{prompt}\n\n{context}\n\n{references}` | How parts are joined |
 | `page` | `{ url?, title?, description? }` | live document | Overrides detected values; use for SSR |
 | `vars` | `Record<string, string>` | `{}` | Extra `{placeholders}` |
-| `label` | `string` | none | Text before the buttons |
+| `label` | `string` | none | Text before the buttons. In the menu layout: the trigger text (default `strings.menu`, "Ask AI") |
 | `variant` | `"soft" \| "outline" \| "solid" \| "ghost" \| "brand" \| string` | `"soft"` | Visual preset |
 | `shape` | `"circle" \| "rounded" \| "square"` | `"circle"` | Button shape |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | Button size |
 | `theme` | `"light" \| "dark" \| "auto"` | `"light"` | Color scheme |
+| `layout` | `"row" \| "menu"` | `"row"` | `"menu"` renders one trigger button that opens a dropdown of all services, see [Dropdown menu](#dropdown-menu) |
+| `menuAlign` | `"start" \| "end"` | `"start"` | Menu layout: which edge of the trigger the dropdown lines up with |
+| `menuIcons` | `"stack" \| "none"` | `"stack"` | Menu layout: logo stack in the trigger, or label only |
 | `showLabels` | `boolean` | `false` | Service name next to each logo |
 | `unstyled` | `boolean` | `false` | Skip the default CSS |
 | `maxLength` | `number` | `4000` | Max prompt characters. Too long: context shrinks first, then references (whole lines), then instructions, and the prompt is hard-clipped last |
 | `input` | `boolean \| InputOptions \| string \| HTMLInputElement \| HTMLTextAreaElement` | off | Question field: built-in, or an existing one (`{ target, required? }` binds one with options) |
-| `strings` | `{ ask?, question?, copied? }` | English | Translations of the widget's own texts, see [Translations](#translations) |
+| `strings` | `{ ask?, question?, copied?, menu? }` | English | Translations of the widget's own texts, see [Translations](#translations) |
 | `submitService` | `string` | first service | Opened by Enter in the input |
 | `className` | `string` | none | Extra classes on the root (`class-name` attribute on `<ask-ai>`) |
 | `onOpen` | `(detail: OpenDetail) => void` | none | Called right before a service opens |
 
-`InputOptions` is `{ target?: string | HTMLInputElement | HTMLTextAreaElement; placeholder?: string; required?: boolean; multiline?: boolean }`: with `target` it binds an existing field and only `required` applies, otherwise it configures the built-in field. `Strings` is `{ ask?: string; question?: string; copied?: string }`. `OpenDetail` is `{ service, prompt, url }`. `PromptContext` is `{ service, question, url, title, description, selection, vars }`. Also exported as types: `Strings`, `LiteAskAIOptions`, `ServiceDef`, `ServiceKey`, `PromptPart`, `Variant`, `Shape`, `Size`, `Theme`, `Item`, `Instance`.
+`InputOptions` is `{ target?: string | HTMLInputElement | HTMLTextAreaElement; placeholder?: string; required?: boolean; multiline?: boolean }`: with `target` it binds an existing field and only `required` applies, otherwise it configures the built-in field. `Strings` is `{ ask?: string; question?: string; copied?: string; menu?: string }`. `OpenDetail` is `{ service, prompt, url }`. `PromptContext` is `{ service, question, url, title, description, selection, vars }`. Also exported as types: `Strings`, `LiteAskAIOptions`, `ServiceDef`, `ServiceKey`, `PromptPart`, `Variant`, `Shape`, `Size`, `Theme`, `Item`, `Instance`.
 
 ### `ask-ai-widget` (and `ask-ai-widget/lite`, same exports except `withBuiltins`)
 
@@ -681,6 +767,7 @@ Everything from `ask-ai-widget` plus `AskAIElement`, `defineAskAI`, `parseAttrs`
 
 - Buttons are real links (`<a href target="_blank" rel="noopener noreferrer">`) with `aria-label="Ask Claude"` and a `title`; logos are `aria-hidden`.
 - Middle-click, Ctrl/Cmd-click and "copy link address" work natively, because hrefs are real and kept current.
+- In the menu layout the trigger is a `<button aria-haspopup="menu" aria-expanded aria-controls>` and the list a `role="menu"` of `role="menuitem"` links with arrow-key, Home/End, type-ahead and Escape handling, see [Dropdown menu](#dropdown-menu).
 - Buttons are grouped (`role="group"`, labelled by `label`), keyboard-focusable, with a visible focus ring (`--aai-focus`). `prefers-reduced-motion` disables the transitions.
 - The built-in field has `aria-label="Your question"` and gets `aria-invalid="true"` when empty. The clipboard hint is announced through a persistent `role="status"` live region.
 - The widget's own texts ("Ask X", "Your question", "Prompt copied — paste it into X") are English by default and translatable through `strings`, see [Translations](#translations). The name of the button group is your `label` (or "Ask AI" without one), so set `label` on non-English pages.

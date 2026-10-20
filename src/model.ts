@@ -29,7 +29,7 @@ export function builtinInput(opts: AskAIOptions): InputOptions | null {
   return c && !c.target ? c : null;
 }
 
-const STRINGS: Required<Strings> = { ask: "Ask {service}", question: "Your question", copied: "Prompt copied — paste it into {service}" };
+const STRINGS: Required<Strings> = { ask: "Ask {service}", question: "Your question", copied: "Prompt copied — paste it into {service}", menu: "Ask AI" };
 
 /** A text the widget writes itself, translated through `opts.strings`. */
 export const str = (opts: AskAIOptions, key: keyof Strings, service = ""): string =>
@@ -43,5 +43,16 @@ export function rootAttrs(opts: AskAIOptions): Record<string, string> {
     "data-shape": opts.shape || "circle",
     "data-size": opts.size || "md",
     "data-theme": opts.theme || "light",
+    "data-layout": opts.layout === "menu" ? "menu" : "row",
   };
 }
+
+/** Menu layout helpers shared by every renderer (identical markup). */
+export const isMenu = (opts: AskAIOptions): boolean => opts.layout === "menu";
+/** Trigger text and menu name: `label`, else `strings.menu`, else "Ask AI". */
+export const menuLabel = (opts: AskAIOptions): string => opts.label || str(opts, "menu");
+/** Items shown as logos in the closed trigger: the first three that have an icon, none with `menuIcons: "none"`. */
+export const stackItems = (opts: AskAIOptions, items: Item[]): Item[] =>
+  opts.menuIcons === "none" ? [] : items.filter((i) => i.icon).slice(0, 3);
+/** Chevron icon path (stroke, 24x24). */
+export const CHEVRON = "m6 9 6 6 6-6";
