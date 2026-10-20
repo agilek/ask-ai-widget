@@ -3,7 +3,7 @@ import type { AskAIOptions, InputOptions, Instance } from "./types";
 
 // attribute -> kind: l list, c context, b boolean, n number, j JSON; anything else is a string
 const KINDS: Record<string, string> = { services: "l", references: "l", page: "j", strings: "j", context: "c", "show-labels": "b", unstyled: "b", "max-length": "n", vars: "j" };
-"prompt instructions template label variant shape size theme layout menu-align menu-icons submit-service class-name".split(" ").forEach((k) => (KINDS[k] = "s"));
+"prompt instructions template label label-position variant shape size theme layout menu-align menu-icons submit-service class-name".split(" ").forEach((k) => (KINDS[k] = "s"));
 const INPUT = ["input", "placeholder", "required", "multiline"];
 const camel = (s: string) => s.replace(/-(\w)/g, (_, c: string) => c.toUpperCase());
 
@@ -117,7 +117,7 @@ declare global {
 
 /** String attributes accepted by `<ask-ai>` in JSX. Function-valued options are properties (use a ref). */
 interface AskAIJsxAttrs {
-  services?: string; prompt?: string; instructions?: string; context?: string; template?: string; label?: string;
+  services?: string; prompt?: string; instructions?: string; context?: string; template?: string; label?: string; "label-position"?: "left" | "top" | "right" | "bottom" | "none";
   variant?: string; shape?: "circle" | "rounded" | "square"; size?: "sm" | "md" | "lg"; theme?: "light" | "dark" | "auto"; layout?: "row" | "menu"; "menu-align"?: "start" | "end"; "menu-icons"?: "stack" | "none";
   "show-labels"?: boolean | ""; unstyled?: boolean | ""; "max-length"?: number | string; "submit-service"?: string;
   "class-name"?: string; input?: boolean | string; placeholder?: string; required?: boolean | "false";

@@ -44,11 +44,14 @@ export function rootAttrs(opts: AskAIOptions): Record<string, string> {
     "data-size": opts.size || "md",
     "data-theme": opts.theme || "light",
     "data-layout": opts.layout === "menu" ? "menu" : "row",
+    "data-label-position": opts.layout === "menu" ? "left" : opts.labelPosition || "left",
   };
 }
 
 /** Menu layout helpers shared by every renderer (identical markup). */
 export const isMenu = (opts: AskAIOptions): boolean => opts.layout === "menu";
+/** Whether the visible label span is rendered: not in the menu layout (the label is the trigger text) and not for `labelPosition: "none"`. */
+export const showLabel = (opts: AskAIOptions): boolean => !!opts.label && !isMenu(opts) && opts.labelPosition !== "none";
 /** Trigger text and menu name: `label`, else `strings.menu`, else "Ask AI". */
 export const menuLabel = (opts: AskAIOptions): string => opts.label || str(opts, "menu");
 /** Items shown as logos in the closed trigger: the first three that have an icon, none with `menuIcons: "none"`. */

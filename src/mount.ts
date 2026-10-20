@@ -1,5 +1,5 @@
 import type { AskAIOptions, Instance } from "./types";
-import { CHEVRON, builtinInput, firstChar, getItems, isMenu, menuLabel, rootAttrs, stackItems, str } from "./model";
+import { CHEVRON, builtinInput, firstChar, getItems, isMenu, menuLabel, showLabel, rootAttrs, stackItems, str } from "./model";
 import { attachMenu } from "./menu-lazy";
 import { resolveServices } from "./registry";
 import { activate, getInput, readQuestion } from "./open";
@@ -64,7 +64,7 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
     menuCtl = undefined;
     root!.textContent = "";
     const menu = isMenu(o);
-    if (o.label && !menu) root!.append(el("span", { class: "aai__label" }, o.label));
+    if (showLabel(o)) root!.append(el("span", { class: "aai__label" }, o.label));
     const inp = builtinInput(o);
     if (inp) {
       const i = el(inp.multiline ? "textarea" : "input", { class: "aai__input", "aria-label": str(o, "question") }) as HTMLInputElement;

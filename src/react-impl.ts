@@ -4,7 +4,7 @@ import {
   type HTMLAttributes, type ReactElement, type ReactNode,
 } from "react";
 import type { AskAIOptions, LiteAskAIOptions } from "./types";
-import { CHEVRON, builtinInput, firstChar, getItems, isMenu, menuLabel, rootAttrs, stackItems, str } from "./model";
+import { CHEVRON, builtinInput, firstChar, getItems, isMenu, menuLabel, showLabel, rootAttrs, stackItems, str } from "./model";
 import { attachMenu } from "./menu-lazy";
 import { selDown, selFocus } from "./prompt";
 import { resolveServices } from "./registry";
@@ -95,7 +95,7 @@ export const makeAskAI = (norm: Normalize) => forwardRef<HTMLDivElement, AskAIPr
   const inp = builtinInput(opts);
   const all = getItems(opts, inp ? q.trim() : "");
   const children: ReactNode[] = [];
-  if (opts.label && !menu) children.push(h("span", { key: "label", className: "aai__label" }, opts.label));
+  if (showLabel(opts)) children.push(h("span", { key: "label", className: "aai__label" }, opts.label));
   if (inp) {
     const field = {
       className: "aai__input", "aria-label": str(opts, "question"), placeholder: inp.placeholder, value: q,

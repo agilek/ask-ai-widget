@@ -1,7 +1,7 @@
 import * as Vue from "vue";
 import { defineComponent, getCurrentInstance, h, onBeforeUnmount, onMounted, onUpdated, ref, watch, type PropType } from "vue";
 import type { AskAIOptions, OpenDetail, PromptPart, ServiceDef, ServiceKey, Strings, Variant, Shape, Size, Theme } from "./types";
-import { CHEVRON, builtinInput, firstChar, getItems, isMenu, menuLabel, rootAttrs, stackItems, str } from "./model";
+import { CHEVRON, builtinInput, firstChar, getItems, isMenu, menuLabel, showLabel, rootAttrs, stackItems, str } from "./model";
 import { attachMenu } from "./menu-lazy";
 import { selDown, selFocus } from "./prompt";
 import { resolveServices } from "./registry";
@@ -32,6 +32,7 @@ export const makeAskAI = (norm: Normalize) => defineComponent({
     template: p<string>(String),
     vars: p<Record<string, string>>(Object),
     label: p<string>(String),
+    labelPosition: p<NonNullable<AskAIOptions["labelPosition"]>>(String),
     variant: p<Variant>(String),
     shape: p<Shape>(String),
     size: p<Size>(String),
@@ -124,7 +125,7 @@ export const makeAskAI = (norm: Normalize) => defineComponent({
       const menu = isMenu(o), all = getItems(o, inp ? q.trim() : ""), stack = stackItems(o, all);
       const icon = (d: string) => h("svg", { class: "aai__icon", viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false", fill: "currentColor", "fill-rule": "evenodd" }, [h("path", { d })]);
       return h("div", { ref: root, class: cls, ...data }, [
-        o.label && !menu ? h("span", { class: "aai__label" }, o.label) : null,
+        showLabel(o) ? h("span", { class: "aai__label" }, o.label) : null,
         inp
           ? h("form", { class: "aai__form", onSubmit: (e: Event) => { e.preventDefault(); go(); } },
               inp.multiline ? h("textarea", { ...field, onKeydown: enter }) : h("input", field))

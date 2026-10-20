@@ -18,3 +18,4 @@ jobs:
       # Real-browser state matrix (computed colors in every variant/theme/state); needs a Chromium
       - run: npx playwright install --with-deps chromium
       - run: npm run check:contrast
+      - run: npm run check:label

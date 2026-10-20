@@ -2,16 +2,32 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { transform } from "esbuild";
 
-/** JS expression for `css`, with declaration blocks that occur more than once (dark theme values) hoisted into shared strings. */
+/**
+ * JS expression for `css`, with repeated text hoisted into shared strings (the minified bundle cannot do this for us):
+ * identical declaration blocks (dark theme values), then individual long declarations that repeat (the
+ * `color:var(--aai-fg,var(--_f))` of every button state), whenever that makes the output shorter.
+ */
 function dedupe(css) {
-  const seen = new Map();
-  for (const [b] of css.matchAll(/\{[^{}]{30,}\}/g)) seen.set(b, (seen.get(b) || 0) + 1);
-  const dup = [...seen].filter(([, n]) => n > 1).map(([b]) => b.slice(1, -1));
-  if (!dup.length) return JSON.stringify(css);
-  if (/[`\\]|\$\{/.test(css)) throw new Error("css-string: unsupported characters in CSS");
+  if (/[`\\]|\$\{/.test(css)) return JSON.stringify(css);
+  const defs = [];
+  const hoist = (text, key) => {
+    const seen = new Map();
+    for (const m of text.matchAll(key)) seen.set(m[0], (seen.get(m[0]) || 0) + 1);
+    return [...seen].filter(([t, n]) => n > 1 && n * (t.length - 5) > t.length + 16).map(([t]) => t);
+  };
   let body = css;
-  dup.forEach((d, i) => (body = body.split(`{${d}}`).join(`{\${v${i}}}`)));
-  return `(() => { ${dup.map((d, i) => `const v${i} = ${JSON.stringify(d)};`).join(" ")} return \`${body}\`; })()`;
+  // 1. whole blocks that repeat
+  for (const blk of hoist(body, /\{[^{}]{30,}\}/g)) {
+    body = body.split(blk).join("{${v" + defs.length + "}}");
+    defs.push(blk.slice(1, -1));
+  }
+  // 2. single declarations that repeat (not the already hoisted placeholders)
+  for (const d of hoist(body.replace(/\$\{v\d+\}/g, ""), /(?<=[{;])[^{};$]{24,}(?=[;}])/g)) {
+    body = body.replace(/(?<=[{;])[^{};]+(?=[;}])/g, (m) => (m === d ? "${v" + defs.length + "}" : m));
+    defs.push(d);
+  }
+  if (!defs.length) return JSON.stringify(css);
+  return `(() => { ${defs.map((d, i) => `const v${i} = ${JSON.stringify(d)};`).join(" ")} return \`${body}\`; })()`;
 }
 
 /** Minified CSS text. esbuild keeps custom-property values verbatim, so drop the whitespace it leaves there (no strings in our CSS). */

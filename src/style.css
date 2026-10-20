@@ -40,6 +40,10 @@
 }
 /* With the built-in field the buttons are its submit action: label, then field and buttons on one full-width row.
    The field has a zero flex basis, so it shrinks instead of pushing the buttons down. */
+/* label position: top/bottom give the label its own (wrapped) line, right/bottom order it after the buttons and the field */
+.aai[data-label-position=top], .aai[data-label-position=bottom] { --_lb: 100% }
+.aai[data-label-position=right] { --_lo: 1 }
+.aai[data-label-position=bottom] { --_lo: 1; --_nb: 1 }
 .aai:has(> .aai__form) { display: flex; width: 100%; container-type: inline-size }
 .aai[data-size=sm] { --_s: 28px; --_i: 14px; --_fz: .875 }
 .aai[data-size=lg] { --_s: 44px; --_i: 22px; --_fz: 1.125 }
@@ -86,7 +90,7 @@
 
 
 
-.aai__label { flex: none; white-space: nowrap; color: var(--aai-label-color, var(--_m)) }
+.aai__label { flex: 0 0 var(--_lb, auto); order: var(--_lo, 0); white-space: nowrap; color: var(--aai-label-color, var(--_m)) }
 .aai__form { flex: 1 1 0; min-width: 0; margin: 0 calc(min(var(--aai-gap, 8px), 6px) - var(--aai-gap, 8px)) 0 0 } /* field and buttons sit closer than the gap to the label */
 /*
  * The field follows the buttons: same fill, border, radius, height and hover (variant/shape/size/theme live in the
@@ -103,7 +107,6 @@
   min-height: var(--aai-btn-size, var(--_s));
   margin: 0;
   padding: var(--_pb, 0) calc(var(--aai-btn-size, var(--_s)) * .4);
-  -webkit-appearance: none;
   appearance: none;
   font: inherit;
   font-size: calc(var(--aai-font-size, 14px) * var(--_fz));
@@ -134,7 +137,7 @@
   height: var(--aai-btn-size, var(--_s));
   margin: 0;
   padding: 0 calc((var(--aai-btn-size, var(--_s)) - var(--aai-icon-size, var(--_i))) / 2);
-  color: var(--aai-fg, var(--_k, var(--_f)));
+  color: var(--aai-fg, var(--_f));
   background: var(--aai-bg, var(--_b));
   border: 1px solid var(--aai-border, var(--_o));
   border-radius: var(--aai-radius, var(--_r));
@@ -143,10 +146,10 @@
   text-decoration: none;
   transition: background var(--aai-transition, .15s ease), transform var(--aai-transition, .15s ease);
 }
-.aai__list .aai__btn:visited { color: var(--aai-fg, var(--_k, var(--_f))); text-decoration: none }
-.aai__list .aai__btn:focus-visible { color: var(--aai-fg, var(--_k, var(--_f))); background: var(--aai-bg, var(--_b)); text-decoration: none; outline: 2px solid var(--aai-focus, var(--_u)); outline-offset: var(--_oo, 2px) }
-.aai__list .aai__btn:hover { color: var(--aai-fg, var(--_k, var(--_f))); background: var(--aai-bg-hover, var(--_h)); text-decoration: none }
-.aai__list .aai__btn:active { color: var(--aai-fg, var(--_k, var(--_f))); background: var(--aai-bg-hover, var(--_h)); transform: scale(.96) }
+.aai__list .aai__btn:visited { color: var(--aai-fg, var(--_f)); text-decoration: none }
+.aai__list .aai__btn:focus-visible { color: var(--aai-fg, var(--_f)); background: var(--aai-bg, var(--_b)); text-decoration: none; outline: 2px solid var(--aai-focus, var(--_u)); outline-offset: var(--_oo, 2px) }
+.aai__list .aai__btn:hover { color: var(--aai-fg, var(--_f)); background: var(--aai-bg-hover, var(--_h)); text-decoration: none }
+.aai__list .aai__btn:active { color: var(--aai-fg, var(--_f)); background: var(--aai-bg-hover, var(--_h)); transform: scale(.96) }
 .aai .aai__icon { display: block; flex: none; width: var(--aai-icon-size, var(--_i)); height: var(--aai-icon-size, var(--_i)); max-width: none; fill: currentColor; color: var(--aai-fg, var(--_ik, currentColor)) }
 .aai__name { font-size: var(--_ns, .9em); font-weight: 500; white-space: nowrap }
 .aai__hint { flex-basis: 100%; font-size: .85em; color: var(--aai-label-color, var(--_m)) }
@@ -158,7 +161,7 @@
 }
 /* narrow containers: the label takes its own line, field and buttons stay together below it; very narrow: small buttons */
 @container (max-width: 440px) {
-  .aai__label { flex-basis: 100%; white-space: normal }
+  .aai__label { flex-basis: 100%; white-space: normal; order: var(--_nb, 0) }
 }
 @container (max-width: 400px) {
   .aai__form, .aai__list { --_s: 28px; --_i: 14px; --_fz: .875 }

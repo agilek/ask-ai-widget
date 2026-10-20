@@ -84,8 +84,13 @@ export interface AskAIOptions {
   page?: { url?: string; title?: string; description?: string };
   /** Extra template variables. */
   vars?: Record<string, string>;
-  /** Text before the buttons, e.g. "Ask AI about this page". */
+  /** Text next to the buttons, e.g. "Ask AI about this page". See `labelPosition`. */
   label?: string;
+  /**
+   * Where the visible `label` goes: "left" (default), "top", "right", "bottom", or "none" (no visible text; the label is
+   * still the accessible name of the button group). Ignored by the menu layout, where the label is the trigger text.
+   */
+  labelPosition?: "left" | "top" | "right" | "bottom" | "none";
   variant?: Variant;
   shape?: Shape;
   size?: Size;

@@ -170,7 +170,8 @@
     "test": "vitest run",
     "size": "node scripts/size.mjs",
     "dev": "tsup --watch",
-    "check:contrast": "node scripts/contrast-check.mjs"
+    "check:contrast": "node scripts/contrast-check.mjs",
+    "check:label": "node scripts/label-check.mjs"
   },
   "peerDependencies": {
     "react": ">=17",

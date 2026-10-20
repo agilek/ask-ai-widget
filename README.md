@@ -4,7 +4,7 @@
 
 ![ask-ai-widget](docs/screenshot.png)
 
-[![gzip size](https://img.shields.io/badge/gzip-11.84%20kB-brightgreen)](#bundle-size)
+[![gzip size](https://img.shields.io/badge/gzip-12.16%20kB-brightgreen)](#bundle-size)
 [![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/types-included-3178c6)](#api-reference)
@@ -68,6 +68,7 @@ The same guide is published at [`llms.txt`](llms.txt), so agents that read llms.
 - [Prompt composition](#prompt-composition)
 - [Services](#services)
 - [Dropdown menu](#dropdown-menu)
+- [Label position](#label-position)
 - [Translations](#translations)
 - [Styling](#styling)
 - [Bundle size and tree-shaking](#bundle-size)
@@ -122,7 +123,8 @@ With a bundler, `import "ask-ai-widget/element";` registers the tag instead.
 | Attribute | Property | Value |
 | --- | --- | --- |
 | `services` | `services` | comma list of keys: `"claude,chatgpt"` |
-| `label` | `label` | text before the buttons |
+| `label` | `label` | text next to the buttons |
+| `label-position` | `labelPosition` | `left` (default), `top`, `right`, `bottom`, `none`, see [Label position](#label-position) |
 | `variant` | `variant` | `soft` (default), `outline`, `solid`, `ghost`, `brand`, or your own name |
 | `shape` | `shape` | `circle` (default), `rounded`, `square` |
 | `size` | `size` | `sm`, `md` (default), `lg` |
@@ -473,6 +475,21 @@ Markup (identical in every renderer):
 
 Hover and focus rows use `--aai-tint`. The panel is at least 200px wide. With `prefers-reduced-motion` the transitions are off.
 
+## Label position
+
+`label` is the text next to the buttons. `labelPosition` decides where it sits: `left` (default), `top` (own line above), `right` (after the buttons) or `bottom` (own line below). `none` renders no visible text, yet the label stays the accessible name of the button group, so screen readers still announce "Ask AI about this page".
+
+```html
+<ask-ai label="Ask AI about this page" label-position="top"></ask-ai>
+<div data-ask-ai data-label="Ask AI" data-label-position="bottom"></div>   <!-- CDN -->
+```
+
+```js
+mount("#w", { label: "Ask AI about this page", labelPosition: "right" });   // React / Vue: the labelPosition prop
+```
+
+The label is always the first element in the DOM (screen readers read it before the buttons); only CSS moves it, and the root gets `data-label-position`. With the built-in question field the field and the buttons always stay together on one row, buttons to the right of the field, and the label goes above or below that row, or after the buttons for `right`. In containers narrower than about 440px a `left` or `right` label moves above, so the field and the buttons keep one row. The menu layout has no separate label (it is the trigger text), so `labelPosition` is ignored there.
+
 ## Translations
 
 The widget writes four texts itself. Override any of them with `strings`; `{service}` is replaced by the service label. Omitted keys keep the English default.
@@ -528,7 +545,7 @@ Rules that only set the private variables (variants, sizes, shapes, themes) are 
 
 ### CSS hooks
 
-The root has `class="aai"` (plus your `className`) and five data attributes (`data-variant`, `data-shape`, `data-size`, `data-theme`, `data-layout`). `<ask-ai>` itself is the root.
+The root has `class="aai"` (plus your `className`) and six data attributes (`data-variant`, `data-shape`, `data-size`, `data-theme`, `data-layout`, `data-label-position`). `<ask-ai>` itself is the root.
 
 | Selector | Element |
 | --- | --- |
@@ -540,6 +557,7 @@ The root has `class="aai"` (plus your `className`) and five data attributes (`da
 | `.aai__label` | the label text |
 | `.aai__form`, `.aai__input` | built-in question form and field (`.aai__input[aria-invalid="true"]` when empty) |
 | `[data-layout]` | `row` (default) / `menu` |
+| `[data-label-position]` | `left` (default) / `top` / `right` / `bottom` / `none`; always `left` in the menu layout |
 | `.aai__list` | wrapper of the buttons, `role="group"` (in the menu layout also `.aai__menu`, `role="menu"`) |
 | `.aai__trigger`, `.aai__trigger-label`, `.aai__stack`, `.aai__stack-item`, `.aai__chevron` | menu layout: the trigger button, its text, logo stack and chevron. The chevron rotates while the trigger has `aria-expanded="true"` |
 | `.aai__btn`, `.aai__btn--<key>`, `[data-service="<key>"]` | each button (an `<a>`) |
@@ -550,7 +568,7 @@ The root has `class="aai"` (plus your `className`) and five data attributes (`da
 Markup, identical in every renderer:
 
 ```html
-<div class="aai" data-variant="soft" data-shape="circle" data-size="md" data-theme="light" data-layout="row">
+<div class="aai" data-variant="soft" data-shape="circle" data-size="md" data-theme="light" data-layout="row" data-label-position="left">
   <span class="aai__label">Ask AI about this page</span>
   <!-- with input: <form class="aai__form"><input class="aai__input" aria-label="Your question"></form> -->
   <div class="aai__list" role="group" aria-label="Ask AI about this page">
@@ -639,13 +657,13 @@ Measured with `npm run size` (esbuild, minified, target ES2019, bundled the way 
 
 | Bundle | min | min+gzip |
 | --- | ---: | ---: |
-| CDN build `dist/ask-ai.min.js` (everything: all 7 logos, element, auto-mount, dropdown) | 29,287 B | 11,841 B |
-| `mount` from `ask-ai-widget` (all 7 logos) | 20,007 B | 8,745 B |
-| `ask-ai-widget/element` | 22,159 B | 9,646 B |
-| React `AskAI` from `ask-ai-widget/react` | 20,024 B | 8,737 B |
-| **lite** `mount` + 2 logos (claude, chatgpt) | 17,093 B | 7,312 B |
-| **lite** React `AskAI` + 2 logos | 17,131 B | 7,296 B |
-| dropdown chunk, loaded on demand (same for every entry) | 5,707 B | 2,184 B |
+| CDN build `dist/ask-ai.min.js` (everything: all 7 logos, element, auto-mount, dropdown) | 30,180 B | 12,162 B |
+| `mount` from `ask-ai-widget` (all 7 logos) | 20,620 B | 8,987 B |
+| `ask-ai-widget/element` | 22,787 B | 9,901 B |
+| React `AskAI` from `ask-ai-widget/react` | 20,664 B | 8,990 B |
+| **lite** `mount` + 2 logos (claude, chatgpt) | 17,706 B | 7,553 B |
+| **lite** React `AskAI` + 2 logos | 17,771 B | 7,551 B |
+| dropdown chunk, loaded on demand (same for every entry) | 5,972 B | 2,267 B |
 
 The npm rows are the **initial** chunk, what row-layout users load. The dropdown code and its CSS are a separate chunk that is imported dynamically (at mount time) only when `layout: "menu"` is used, so row-only apps never ship them. The CDN build is one self-contained file and includes everything.
 
@@ -705,7 +723,8 @@ All entries share the types below. Import them from any entry (`import type { As
 | `template` | `string` | `{instructions}\n\n{prompt}\n\n{context}\n\n{references}` | How parts are joined |
 | `page` | `{ url?, title?, description? }` | live document | Overrides detected values; use for SSR |
 | `vars` | `Record<string, string>` | `{}` | Extra `{placeholders}` |
-| `label` | `string` | none | Text before the buttons. In the menu layout: the trigger text (default `strings.menu`, "Ask AI") |
+| `label` | `string` | none | Text next to the buttons. In the menu layout: the trigger text (default `strings.menu`, "Ask AI") |
+| `labelPosition` | `"left" \| "top" \| "right" \| "bottom" \| "none"` | `"left"` | Where the visible label goes. `"none"` hides it but keeps it as the accessible name. Ignored by the menu layout. See [Label position](#label-position) |
 | `variant` | `"soft" \| "outline" \| "solid" \| "ghost" \| "brand" \| string` | `"soft"` | Visual preset |
 | `shape` | `"circle" \| "rounded" \| "square"` | `"circle"` | Button shape |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | Button size |

@@ -22,6 +22,7 @@ npm install
 npm run build   # tsup + style.css (must run before size and the demo)
 npm test        # vitest
 npm run size    # bundles real consumer imports; fails on budget / tree-shaking regressions
+npm run check:label      # label position geometry in Chromium (left/top/right/bottom, row and question mode, 640px and 375px)
 npm run check:contrast   # real Chromium (playwright-core, dev only): every variant x theme x layout x state, computed colors; set CHROMIUM_PATH or run `npx playwright install chromium`; --sheet=file.png writes a contact sheet
 node scripts/compact-icons.mjs   # regenerate src/icons.ts
 ```

@@ -223,7 +223,7 @@ describe("stylesheets", () => {
     expect(css).toMatch(/--_m:#6b6b70/);
     // every state of the field and the buttons reads fg and bg from the same private pair
     expect(css).toContain(".aai__form .aai__input:hover{color:var(--aai-input-fg,var(--_if));background:var(--aai-input-bg,var(--_ih))}");
-    expect(css).toMatch(/\.aai__list \.aai__btn:hover\{color:var\(--aai-fg,var\(--_k,var\(--_f\)\)\);background:var\(--aai-bg-hover,var\(--_h\)\)/);
+    expect(css).toMatch(/\.aai__list \.aai__btn:hover\{color:var\(--aai-fg,var\(--_f\)\);background:var\(--aai-bg-hover,var\(--_h\)\)/);
     // every state rule of the buttons, trigger and menu items sets text AND fill
     for (const sheet of [css, menu])
       for (const m of sheet.matchAll(/(\.aai[^{},]*:(?:hover|active))\{([^}]*)\}/g))
@@ -236,7 +236,7 @@ describe("stylesheets", () => {
     expect(css).not.toContain("placeholder-shown");
     expect(css).toMatch(/\.aai__form\{flex:1 1 0;min-width:0;/);
     expect(css).toMatch(/\.aai__list\{flex:none;/);
-    expect(css).toContain("@container (max-width: 440px){.aai__label{flex-basis:100%;white-space:normal}}");
+    expect(css).toContain("@container (max-width: 440px){.aai__label{flex-basis:100%;white-space:normal;order:var(--_nb,0)}}");
     expect(css).not.toMatch(/\.aai__form\{[^}]*flex-basis:100%/); // the field and the buttons never part
     expect(menu).not.toContain("opacity");
   });
