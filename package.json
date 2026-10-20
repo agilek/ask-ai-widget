@@ -45,6 +45,7 @@
   "files": [
     "dist",
     "style.css",
+    "style-row.css",
     "README.md",
     "LICENSE",
     "NOTICE",
@@ -161,13 +162,15 @@
         "default": "./dist/services.cjs"
       }
     },
-    "./style.css": "./style.css"
+    "./style.css": "./style.css",
+    "./style-row.css": "./style-row.css"
   },
   "scripts": {
     "build": "tsup && node scripts/build-css.mjs",
     "test": "vitest run",
     "size": "node scripts/size.mjs",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "check:contrast": "node scripts/contrast-check.mjs"
   },
   "peerDependencies": {
     "react": ">=17",
@@ -190,6 +193,7 @@
     "@types/react-dom": "^19.3.0",
     "@vue/server-renderer": "^3.5.44",
     "happy-dom": "^21.0.3",
+    "playwright-core": "^1.59.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "tsup": "^9.0.0",

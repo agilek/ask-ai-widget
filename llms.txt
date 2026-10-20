@@ -14,7 +14,7 @@ CDN: https://cdn.jsdelivr.net/npm/ask-ai-widget@0/dist/ask-ai.min.js
 - Vue / Nuxt: `import { AskAI, plugin } from "ask-ai-widget/vue"`
 - Svelte (3, 4, 5) / SvelteKit: `import { askAI } from "ask-ai-widget/svelte"` (an action)
 - Smaller bundles: same names under `ask-ai-widget/lite`, `lite/element`, `lite/react`, `lite/vue`, `lite/svelte`, with service OBJECTS imported from `ask-ai-widget/services`.
-- Stylesheet file (optional, for SSR): `import "ask-ai-widget/style.css"`
+- Stylesheet file (optional, for SSR): `import "ask-ai-widget/style.css"` (row + menu CSS; `ask-ai-widget/style-row.css` is row-only). The dropdown code and CSS are a lazy chunk, loaded only for `layout: "menu"` (the CDN build contains it).
 
 ## Minimal snippets
 
@@ -109,6 +109,6 @@ Custom: `registerService({ key, label, url, param, icon?, color?, prefill? })` o
 ## Styling hooks
 
 Root: `.aai` (the `<ask-ai>` element itself) with `data-variant`, `data-shape`, `data-size`, `data-theme`, `data-layout`. Children: `.aai__label`, `.aai__form`, `.aai__input`, `.aai__list`, `.aai__btn` (also `.aai__btn--<key>` and `[data-service]`), `.aai__icon`, `.aai__name`, `.aai__hint`; menu layout: `.aai__trigger`, `.aai__trigger-label`, `.aai__stack`, `.aai__stack-item`, `.aai__chevron`, `.aai__menu` (also `.aai__list`).
-Override in 3 tiers: (1) set `--aai-*` anywhere; (2) target the classes: rules use one class plus at most one pseudo-class/attribute (specificity <= 0,2,0, no `!important`), so they beat `a {}` / `svg {}` resets and lose to any later class selector; (3) `unstyled` (skip the stylesheet). The `<style>` is prepended to `<head>`.
+Override in 3 tiers: (1) set `--aai-*` anywhere; (2) target the classes with TWO classes: base rules are scoped like `.aai__list .aai__btn`, `.aai__form .aai__input`, `.aai .aai__trigger` (specificity <= 0,2,0) and state rules like `.aai__list .aai__btn:hover` go up to 0,3,0, no `!important`, so host rules on bare elements (`a:hover`, `.prose a`, `input[type=text]:hover`, `button:hover`, `svg`) do not leak in; override with e.g. `.my-site .aai__btn {}`; (3) `unstyled` (skip the stylesheet). The `<style>` is prepended to `<head>`.
 Custom properties: `--aai-gap` (8px), `--aai-btn-size` (36px), `--aai-icon-size` (18px), `--aai-radius` (999px), `--aai-bg` (#f1f1f3), `--aai-bg-hover`, `--aai-fg` (#1a1a1a), `--aai-border`, `--aai-shadow`, `--aai-label-color`, `--aai-font`, `--aai-font-size`, `--aai-focus`, `--aai-transition`, `--aai-line`, `--aai-tint`, `--aai-input-bg`, `--aai-input-fg`, `--aai-brand` (set per button from the service color).
 Custom preset: add `.aai[data-variant="mine"] { --aai-bg: ...; --aai-fg: ...; }` and use `variant="mine"`.

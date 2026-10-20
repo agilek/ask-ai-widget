@@ -5,7 +5,7 @@ import {
 } from "react";
 import type { AskAIOptions, LiteAskAIOptions } from "./types";
 import { CHEVRON, builtinInput, firstChar, getItems, isMenu, menuLabel, rootAttrs, stackItems, str } from "./model";
-import { bindMenu } from "./menu";
+import { attachMenu } from "./menu-lazy";
 import { selDown, selFocus } from "./prompt";
 import { resolveServices } from "./registry";
 import type { Normalize } from "./mount";
@@ -87,11 +87,12 @@ export const makeAskAI = (norm: Normalize) => forwardRef<HTMLDivElement, AskAIPr
 
   const uid = useUid();
   // The dropdown's open state lives in the DOM (see menu.ts): React re-applies only props that changed, so a re-render keeps it open.
-  useEffect(() => (root.current ? bindMenu(root.current).unbind : undefined), []);
+  const menu = isMenu(opts);
+  // Menu markup renders synchronously; the dropdown code and CSS load lazily, only for this layout.
+  useEffect(() => (menu && root.current ? attachMenu(root.current, !opts.unstyled).unbind : undefined), [menu, opts.unstyled]);
 
   const attrs = rootAttrs(opts);
   const inp = builtinInput(opts);
-  const menu = isMenu(opts);
   const all = getItems(opts, inp ? q.trim() : "");
   const children: ReactNode[] = [];
   if (opts.label && !menu) children.push(h("span", { key: "label", className: "aai__label" }, opts.label));
@@ -105,7 +106,7 @@ export const makeAskAI = (norm: Normalize) => forwardRef<HTMLDivElement, AskAIPr
       },
     };
     children.push(h("form", { key: "form", className: "aai__form", onSubmit: (e: { preventDefault(): void }) => { e.preventDefault(); go(); } },
-      inp.multiline ? h("textarea", { ...field, onKeyDown: enter }) : h("input", { ...field, type: "text" })));
+      inp.multiline ? h("textarea", { ...field, onKeyDown: enter }) : h("input", field)));
   }
   if (menu) {
     const stack = stackItems(opts, all);

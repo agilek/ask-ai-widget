@@ -2,7 +2,7 @@ import * as Vue from "vue";
 import { defineComponent, getCurrentInstance, h, onBeforeUnmount, onMounted, onUpdated, ref, watch, type PropType } from "vue";
 import type { AskAIOptions, OpenDetail, PromptPart, ServiceDef, ServiceKey, Strings, Variant, Shape, Size, Theme } from "./types";
 import { CHEVRON, builtinInput, firstChar, getItems, isMenu, menuLabel, rootAttrs, stackItems, str } from "./model";
-import { bindMenu } from "./menu";
+import { attachMenu } from "./menu-lazy";
 import { selDown, selFocus } from "./prompt";
 import { resolveServices } from "./registry";
 import type { Normalize } from "./mount";
@@ -89,16 +89,22 @@ export const makeAskAI = (norm: Normalize) => defineComponent({
       const f = getInput(opts(), root.value);
       if (f && !root.value!.contains(f)) { ext = f; f.addEventListener("keydown", enter); f.addEventListener("input", clear); }
     };
-    let menuCtl: ReturnType<typeof bindMenu> | undefined;
+    let menuCtl: { unbind(): void } | undefined;
+    // Menu markup renders synchronously; the dropdown code and CSS load lazily, only for this layout.
+    const syncMenu = () => {
+      menuCtl?.unbind();
+      menuCtl = isMenu(opts()) ? attachMenu(root.value!, !props.unstyled) : undefined;
+    };
     onMounted(() => {
       // The dropdown's open state lives in the DOM (see menu.ts): Vue only patches props that changed, so a re-render keeps it open.
-      menuCtl = bindMenu(root.value!);
+      syncMenu();
       if (!props.unstyled) injectStyles(root.value?.ownerDocument);
       sync();
       bind();
     });
     onUpdated(sync);
     watch(() => props.input, bind, { flush: "post" });
+    watch(() => [props.layout, props.unstyled], syncMenu, { flush: "post" });
     onBeforeUnmount(() => { unbind(); menuCtl?.unbind(); });
 
     return () => {
@@ -121,7 +127,7 @@ export const makeAskAI = (norm: Normalize) => defineComponent({
         o.label && !menu ? h("span", { class: "aai__label" }, o.label) : null,
         inp
           ? h("form", { class: "aai__form", onSubmit: (e: Event) => { e.preventDefault(); go(); } },
-              inp.multiline ? h("textarea", { ...field, onKeydown: enter }) : h("input", { ...field, type: "text" }))
+              inp.multiline ? h("textarea", { ...field, onKeydown: enter }) : h("input", field))
           : null,
         menu
           ? h("button", { type: "button", class: "aai__trigger", "aria-haspopup": "menu", "aria-expanded": "false", "aria-controls": uid }, [

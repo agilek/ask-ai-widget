@@ -1,9 +1,27 @@
+// Loaded on demand (menu-lazy.ts) and only for `layout: "menu"`: this module holds the dropdown's behaviour and its CSS,
+// so row-only users never download them. Importing it has no side effects; styles are injected when asked.
+//
 // Behaviour of the dropdown (`layout: "menu"`), shared by every renderer so they act identically.
 // State lives in the DOM (`aria-expanded` on the trigger, `hidden` on the menu), never in a framework: React and Vue
 // only re-apply props that changed between renders, so a re-render while open leaves the menu open.
 // Listeners are delegated on the root and look elements up on use, so re-rendered markup keeps working.
 
+import menuCss from "./menu.css?raw";
+
 const GAP = 4;
+
+/** The dropdown stylesheet text (minified at build time). */
+export const css: string = menuCss;
+
+/** Inject the menu stylesheet once, right AFTER the core one (`#ask-ai-style`) so the cascade order core -> menu is stable. */
+export function injectMenuStyles(doc: Document): void {
+  if (doc.getElementById("ask-ai-menu-style")) return;
+  const s = doc.createElement("style");
+  s.id = "ask-ai-menu-style";
+  s.textContent = menuCss;
+  const core = doc.getElementById("ask-ai-style");
+  core ? core.after(s) : (doc.head || doc.documentElement).prepend(s);
+}
 
 /** Flip above the trigger when the menu does not fit below and there is more room above. Pure DOM, no library. */
 export function placeMenu(root: HTMLElement, trigger: HTMLElement, menu: HTMLElement): void {
@@ -17,8 +35,8 @@ export function placeMenu(root: HTMLElement, trigger: HTMLElement, menu: HTMLEle
   top ? menu.setAttribute("data-placement", "top") : menu.removeAttribute("data-placement");
 }
 
-/** Wire the menu of `root`. Returns `close` and `unbind` (removes every listener, also the document one). */
-export function bindMenu(root: HTMLElement): { close(focus?: boolean): void; unbind(): void } {
+/** Wire the menu of `root`. Returns `open`, `close` and `unbind` (removes every listener, also the document one). */
+export function bindMenu(root: HTMLElement): { open(at?: number): void; close(focus?: boolean): void; unbind(): void } {
   const doc = root.ownerDocument;
   const t = () => root.querySelector<HTMLElement>(".aai__trigger");
   const m = () => root.querySelector<HTMLElement>(".aai__menu");
@@ -85,6 +103,7 @@ export function bindMenu(root: HTMLElement): { close(focus?: boolean): void; unb
   root.addEventListener("keydown", onKey as EventListener);
   root.addEventListener("keyup", onUp as EventListener);
   return {
+    open,
     close,
     unbind() {
       close();

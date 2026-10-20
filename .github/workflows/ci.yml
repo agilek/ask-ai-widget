@@ -15,3 +15,6 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci && npm run build && npm test && npx tsc --noEmit && npm run size
+      # Real-browser state matrix (computed colors in every variant/theme/state); needs a Chromium
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check:contrast

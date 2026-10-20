@@ -73,9 +73,9 @@ legend + * { clear: both; }
 .field:last-child { margin-bottom: 0; }
 .field > span.l, .l { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 550; margin-bottom: 5px; }
 .l small { font-weight: 400; color: var(--muted); }
-input[type=text], textarea, select { width: 100%; font: inherit; font-size: 14px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-width: 0; }
-textarea { resize: vertical; min-height: 60px; font-family: var(--mono); font-size: 13px; }
-input[type=text]::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
+input[type=text], textarea:not(.aai__input), select { width: 100%; font: inherit; font-size: 14px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-width: 0; }
+textarea:not(.aai__input) { resize: vertical; min-height: 60px; font-family: var(--mono); font-size: 13px; }
+input[type=text]::placeholder, textarea:not(.aai__input)::placeholder { color: var(--muted); opacity: .8; }
 input[type=color] { width: 36px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 .check { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
@@ -156,6 +156,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .gvar h4 { margin: 0 0 8px; font-size: 14px; }
 .gcells { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 12px; }
 .gcell { display: grid; gap: 6px; justify-items: start; }
+.gfields { display: grid; gap: 10px; }
+.gfield { display: grid; gap: 4px; }
+.gfield > button { justify-self: start; font: 11px var(--mono); color: inherit; opacity: .55; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.gfield > button:hover { opacity: 1; }
 .gcell > button { font: 11px var(--mono); color: inherit; opacity: .55; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .gcell > button:hover { opacity: 1; }
 .gpanel :focus-visible { outline-color: #6ea0ff; }
@@ -201,8 +205,8 @@ footer p { margin: 0 0 6px; max-width: 80ch; }
     <h1>Add "Ask AI about this page" in one tag</h1>
     <p class="lead">A tiny button row that opens ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral or DeepSeek with a prefilled prompt. No backend, no tracking, no dependencies.</p>
     <ul class="badges" aria-label="Facts">
-      <li><b>11.06 kB</b> gzip (CDN build)</li>
-      <li><b>8.14 kB</b> gzip with the lite entry + 2 logos</li>
+      <li><b>11.84 kB</b> gzip (CDN build)</li>
+      <li><b>7.31 kB</b> gzip with the lite entry + 2 logos (dropdown loads on demand)</li>
       <li><b>0</b> runtime dependencies</li>
       <li><b>7</b> services</li>
       <li>HTML, React, Vue, Svelte</li>
@@ -302,7 +306,7 @@ footer p { margin: 0 0 6px; max-width: 80ch; }
 <section id="gallery" aria-labelledby="h-gal">
   <div class="wrap">
     <h2 id="h-gal">Gallery</h2>
-    <p class="sub">Every variant in every shape, plus the dropdown menu layout, on light and dark backgrounds. Click a caption to load that combination into the playground.</p>
+    <p class="sub">Every variant in every shape, plus the dropdown menu layout and the question field, on light and dark backgrounds. Click a caption to load that combination into the playground.</p>
     <div class="gal" id="gal"></div>
   </div>
 </section>
@@ -604,8 +608,8 @@ function refreshCode() {
   $("#t-css").hidden = !hasCss;
   if (!hasCss && $("#t-css").getAttribute("aria-selected") === "true") selectTab("html");
   $("#codenote").textContent = lite
-    ? "Lite imports only the logos you name: 8.14 kB gzip with 2 services versus 9.57 kB for the default entry. String keys do not resolve in lite, so pass the service objects."
-    : "The HTML tab loads the CDN build (11.06 kB gzip, all 7 logos). The ESM, React, Vue and Svelte tabs import the npm package.";
+    ? "Lite imports only the logos you name: 7.31 kB gzip with 2 services versus 8.75 kB for the default entry (initial chunk; the dropdown is a lazy 2.18 kB chunk). String keys do not resolve in lite, so pass the service objects."
+    : "The HTML tab loads the CDN build (11.84 kB gzip, all 7 logos and the dropdown). The ESM, React, Vue and Svelte tabs import the npm package.";
 }
 
 function selectTab(id) {
@@ -761,6 +765,23 @@ function buildGallery() {
       AskAI.mount(w, { services: GAL, variant, theme, layout: "menu", menuIcons });
     });
     p.append(m);
+    const q = document.createElement("div");
+    q.className = "gvar";
+    q.innerHTML = `<h4>question field</h4><div class="gfields"></div>`;
+    ["soft", "outline", "solid", "ghost", "brand"].forEach((variant) => {
+      const c = document.createElement("div"); c.className = "gfield";
+      const w = document.createElement("div");
+      const b = document.createElement("button"); b.type = "button"; b.textContent = `${variant} · input`;
+      b.title = "Load into the playground";
+      b.addEventListener("click", () => {
+        S.variant = variant; S.theme = theme; pushState(); sync();
+        $("#playground").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      });
+      c.append(w, b);
+      $(".gfields", q).append(c);
+      AskAI.mount(w, { services: GAL, variant, theme, label: "Ask AI about this page", input: { placeholder: "Your question" } });
+    });
+    p.append(q);
     root.append(p);
   });
 }

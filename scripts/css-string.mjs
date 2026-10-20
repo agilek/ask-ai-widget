@@ -17,7 +17,7 @@ function dedupe(css) {
 /** Minified CSS text. esbuild keeps custom-property values verbatim, so drop the whitespace it leaves there (no strings in our CSS). */
 export async function minifyCss(source) {
   const { code } = await transform(source, { loader: "css", minify: true });
-  return code.trim().replace(/(--[\w-]+): /g, "$1:").replace(/, /g, ",");
+  return code.trim().replace(/(--[\w-]+): /g, "$1:").replace(/, /g, ",").replace(/ \}/g, "}");
 }
 
 /** `import css from "./x.css?raw"` -> the minified CSS as a string. Rules, comments and whitespace are optimized by esbuild. */

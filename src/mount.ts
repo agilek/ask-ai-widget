@@ -1,6 +1,6 @@
 import type { AskAIOptions, Instance } from "./types";
 import { CHEVRON, builtinInput, firstChar, getItems, isMenu, menuLabel, rootAttrs, stackItems, str } from "./model";
-import { bindMenu } from "./menu";
+import { attachMenu } from "./menu-lazy";
 import { resolveServices } from "./registry";
 import { activate, getInput, readQuestion } from "./open";
 import { injectStyles } from "./styles";
@@ -39,6 +39,7 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
   const origAttrs: Record<string, string | null> = {};
   const uid = "aai-m" + ++seq;
   let ext: HTMLInputElement | HTMLTextAreaElement | null = null;
+  let menuCtl: { unbind(): void } | undefined;
 
   const q = () => readQuestion(o, root);
   const go = (key?: string) => activate(root, key || o.submitService || resolveServices(o.services)[0]?.key, o, q());
@@ -59,14 +60,14 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
       root!.setAttribute(k, attrs[k]);
     }
     const prevQ = q();
-    menuCtl.close();
+    menuCtl?.unbind();
+    menuCtl = undefined;
     root!.textContent = "";
     const menu = isMenu(o);
     if (o.label && !menu) root!.append(el("span", { class: "aai__label" }, o.label));
     const inp = builtinInput(o);
     if (inp) {
       const i = el(inp.multiline ? "textarea" : "input", { class: "aai__input", "aria-label": str(o, "question") }) as HTMLInputElement;
-      if (!inp.multiline) i.type = "text";
       if (inp.placeholder) i.placeholder = inp.placeholder;
       i.value = prevQ;
       const f = el("form", { class: "aai__form" });
@@ -112,6 +113,8 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
       ext.addEventListener("input", clearInvalid);
     } else ext = null;
     if (!o.unstyled) injectStyles(root!.ownerDocument);
+    // Markup above is synchronous; the dropdown code and CSS load lazily and only for the menu layout.
+    if (menu) menuCtl = attachMenu(root!, !o.unstyled);
   }
 
   const unbindExt = () => {
@@ -141,7 +144,6 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
     ["submit", onSubmit], ["input", clearInvalid], ["keydown", onKey],
   ];
   on.forEach(([t, f]) => root.addEventListener(t, f));
-  const menuCtl = bindMenu(root);
   render();
 
   let dead = false;
@@ -158,7 +160,7 @@ export function mountWith(target: string | HTMLElement, opts: AskAIOptions, norm
       dead = true;
       if (instances.get(root) === inst) instances.delete(root);
       on.forEach(([t, f]) => root.removeEventListener(t, f));
-      menuCtl.unbind();
+      menuCtl?.unbind();
       unbindExt();
       root.textContent = "";
       root.classList.remove(...added);

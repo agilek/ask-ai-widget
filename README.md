@@ -4,7 +4,7 @@
 
 ![ask-ai-widget](docs/screenshot.png)
 
-[![gzip size](https://img.shields.io/badge/gzip-11.06%20kB-brightgreen)](#bundle-size)
+[![gzip size](https://img.shields.io/badge/gzip-11.84%20kB-brightgreen)](#bundle-size)
 [![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/types-included-3178c6)](#api-reference)
@@ -94,7 +94,8 @@ React, Vue and Svelte are optional peer dependencies. You only need the one you 
 | `ask-ai-widget/react` | `AskAI` component |
 | `ask-ai-widget/vue` | `AskAI` component and `plugin` |
 | `ask-ai-widget/svelte` | `askAI` action |
-| `ask-ai-widget/style.css` | The stylesheet as a file (optional, for zero-FOUC SSR) |
+| `ask-ai-widget/style.css` | The complete stylesheet as a file, row and menu layout (optional, for zero-FOUC SSR) |
+| `ask-ai-widget/style-row.css` | The same without the dropdown rules, for SSR pages that only use the row layout |
 | `ask-ai-widget/lite`, `lite/element`, `lite/react`, `lite/vue`, `lite/svelte` | Same APIs without the built-in logos, for [tree-shaking](#bundle-size) |
 | `ask-ai-widget/services` | The service objects: `chatgpt`, `claude`, `perplexity`, `gemini`, `grok`, `mistral`, `deepseek`, `builtins` |
 | CDN `dist/ask-ai.min.js` | One file, global `AskAI`, auto-defines `<ask-ai>`, auto-mounts `[data-ask-ai]` |
@@ -279,7 +280,7 @@ mount("#w", { input: { target: "#q", required: false } });         // existing f
 
 Behaviour:
 
-- Clicking any button opens that service with the typed question.
+- Clicking any button opens that service with the typed question. In this mode the buttons are the field's submit action: they always sit directly to the right of the field (in the menu layout, the trigger does), on one row with the label. On narrow containers (about 440px and below) the label moves above and the field and buttons stay together on one row below it; below about 400px the buttons shrink to the `sm` size. The field follows `variant`, `shape`, `size` and `theme` like the buttons (soft: same fill; outline: same border; solid: same fill with light text; ghost: transparent with a faint border).
 - **Enter** in the field opens `submitService` (default: the first service). In a textarea, **Shift+Enter** inserts a new line. IME composition is respected.
 - `required` (default `true`) blocks opening when the question is empty: the field gets `aria-invalid="true"` and focus. Set `input: { required: false }` on the built-in field to allow empty questions. For an existing field use `input: { target: "#q", required: false }` (element attribute: `input="#q" required="false"`, CDN auto-mount: `data-input="#q" data-required="false"`); a bare selector or element is always required.
 - Hover and keyboard focus refresh the buttons' `href` with the current question, so middle-click and "copy link address" carry it.
@@ -508,19 +509,22 @@ The widget injects one `<style id="ask-ai-style">` into `<head>`, **prepended**,
 <ask-ai style="--aai-bg: #fff3e0"></ask-ai>                            <!-- one widget -->
 ```
 
-**2. Target the classes.** Visual and structural rules use one class (at most one pseudo-class or attribute, for example `.aai__btn:hover` or `.aai__input[aria-invalid=true]`), so specificity is at most (0,2,0). That beats host resets such as `a { color: blue; text-decoration: underline }` or `svg { display: inline }`, and any class selector of yours that is loaded later (or is as specific) overrides it, without `!important`:
+**2. Target the classes with two classes.** Real sites style bare elements (`a:hover`, `a:visited`, `.prose a`, `input[type=text]:hover`, `button:hover`, `svg { width: 100% }`), so the widget's rules are scoped one class deeper and every state sets the text color and the fill together. Base rules have a specificity of at most (0,2,0), for example `.aai__list .aai__btn`, `.aai__form .aai__input`, `.aai .aai__trigger`. State rules (`:hover`, `:focus-visible`, `:active`, `:visited`, `[aria-invalid=true]`, `::placeholder`) go up to (0,3,0), for example `.aai__list .aai__btn:hover`. There is no `!important`. That beats host rules on bare elements; your own selector wins when it has the same number of classes and is loaded later, or one more:
 
 ```css
-.aai__btn { border-radius: 6px; box-shadow: 0 1px 2px rgb(0 0 0 / .2) }
-.aai__btn--claude { background: #d97757 }
-.aai__btn:hover { transform: translateY(-1px) }
+/* two classes beat the base rules; add the state pseudo-class to beat a state rule */
+.my-site .aai__btn { border-radius: 6px; box-shadow: 0 1px 2px rgb(0 0 0 / .2) }
+.my-site .aai__btn--claude { background: #d97757 }
+.my-site .aai__list .aai__btn:hover { transform: translateY(-1px) }
 ```
+
+Custom properties are the easiest override and always win: `--aai-bg`, `--aai-fg`, `--aai-bg-hover`, `--aai-input-bg`, ... (level 1).
 
 Rules that only set the private variables (variants, sizes, shapes, themes) are more specific; override those through level 1, not by fighting their selectors.
 
 **3. `unstyled`.** Skips the stylesheet injection entirely; the markup stays the same, so you can style every hook from scratch.
 
-> Specificity gotcha: a host rule that is more specific than one class, for example `a:visited { color: purple }` or `.prose a { color: ... }` (both (0,1,1)), still recolors the buttons. Set `--aai-fg` (level 1) or use a selector as specific as yours, such as `.prose .aai__btn { color: ... }`.
+> Specificity gotcha: host rules on bare elements, such as `a:visited`, `.prose a`, `input[type=text]:hover` or `button:hover`, do not leak into the widget (its rules are scoped deeper, see level 2). A host rule with two classes plus a state (`.content .aai__btn:hover`) would; set `--aai-fg` (level 1) or match it with a selector as specific as yours.
 
 ### CSS hooks
 
@@ -574,14 +578,14 @@ Set any of these anywhere (see [Styling](#styling)). They are never declared by 
 | `--aai-fg` | `#1a1a1a` | logo and text color |
 | `--aai-border` | `transparent` | button border color |
 | `--aai-shadow` | `none` | button box-shadow |
-| `--aai-label-color` | `#8a8a8f` | label and hint color |
+| `--aai-label-color` | `#6b6b70` | label and hint color |
 | `--aai-font` | `inherit` | font family |
 | `--aai-font-size` | `14px` | base font size |
 | `--aai-focus` | `#2f6df6` | focus ring color |
 | `--aai-transition` | `.15s ease` | hover transition |
 | `--aai-line` | `#d4d4d9` | input border, outline variant border |
 | `--aai-tint` | `rgba(0,0,0,.06)` | hover tint of `outline` and `ghost` |
-| `--aai-input-bg` / `--aai-input-fg` | `#fff` / `#1a1a1a` | built-in input colors |
+| `--aai-input-bg` / `--aai-input-fg` | the button fill / text color of the variant (`--aai-bg` / `--aai-fg`) | built-in input colors; the field otherwise follows the buttons |
 | `--aai-menu-bg`, `--aai-menu-fg`, `--aai-menu-border`, `--aai-menu-shadow`, `--aai-menu-radius`, `--aai-menu-z` | see [Dropdown menu](#dropdown-menu) | dropdown panel |
 | `--aai-brand` | set per button from the service `color` | color of logos in `variant="brand"` |
 
@@ -607,7 +611,7 @@ A variant is just a name plus one block of (public) custom properties:
 
 ### Other styling options
 
-- **Zero-FOUC SSR**: `import "ask-ai-widget/style.css"` (or `<link rel="stylesheet">` to the file) so the first paint is styled. The runtime still injects its own identical copy once (harmless), unless you pass `unstyled`.
+- **Zero-FOUC SSR**: `import "ask-ai-widget/style.css"` (or `<link rel="stylesheet">` to the file) so the first paint is styled. It contains the core and the dropdown rules; `ask-ai-widget/style-row.css` leaves the dropdown rules out. At runtime the dropdown stylesheet is a separate `<style id="ask-ai-menu-style">` placed right after the core one. The runtime still injects its own identical copy once (harmless), unless you pass `unstyled`.
 - **Dark mode**: `theme="auto"` follows the OS. To follow your site's toggle, pass `theme` from your state, or set the properties under your own class: `.dark { --aai-bg: #2a2a2e; --aai-fg: #f2f2f2; }` (any ancestor works).
 
 ### Recipes
@@ -635,12 +639,15 @@ Measured with `npm run size` (esbuild, minified, target ES2019, bundled the way 
 
 | Bundle | min | min+gzip |
 | --- | ---: | ---: |
-| CDN build `dist/ask-ai.min.js` (all 7 logos, element, auto-mount) | 26,689 B | 11,064 B |
-| `mount` from `ask-ai-widget` (all 7 logos) | 23,327 B | 9,569 B |
-| `ask-ai-widget/element` | 25,479 B | 10,489 B |
-| React `AskAI` from `ask-ai-widget/react` | 23,351 B | 9,549 B |
-| **lite** `mount` + 2 logos (claude, chatgpt) | 20,413 B | 8,139 B |
-| **lite** React `AskAI` + 2 logos | 20,459 B | 8,098 B |
+| CDN build `dist/ask-ai.min.js` (everything: all 7 logos, element, auto-mount, dropdown) | 29,287 B | 11,841 B |
+| `mount` from `ask-ai-widget` (all 7 logos) | 20,007 B | 8,745 B |
+| `ask-ai-widget/element` | 22,159 B | 9,646 B |
+| React `AskAI` from `ask-ai-widget/react` | 20,024 B | 8,737 B |
+| **lite** `mount` + 2 logos (claude, chatgpt) | 17,093 B | 7,312 B |
+| **lite** React `AskAI` + 2 logos | 17,131 B | 7,296 B |
+| dropdown chunk, loaded on demand (same for every entry) | 5,707 B | 2,184 B |
+
+The npm rows are the **initial** chunk, what row-layout users load. The dropdown code and its CSS are a separate chunk that is imported dynamically (at mount time) only when `layout: "menu"` is used, so row-only apps never ship them. The CDN build is one self-contained file and includes everything.
 
 The default entries bundle all seven logos (about 1.4 kB gzip more than two). To pay only for the ones you show, use the **lite** entries and import the service objects. Unused logos are tree-shaken:
 
@@ -817,6 +824,7 @@ npm install
 npm run build      # tsup (ESM, CJS, d.ts, CDN IIFE) + style.css
 npm test           # vitest + happy-dom
 npm run size       # real consumer bundle sizes, fails on budget or tree-shaking regressions
+npm run check:contrast   # Chromium state matrix: contrast of text, placeholder and icons in every variant, theme and state
 node scripts/compact-icons.mjs   # regenerate src/icons.ts from scripts/icons-src/*.svg
 ```
 

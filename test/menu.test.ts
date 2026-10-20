@@ -11,6 +11,7 @@ import { AskAI as VueAskAI } from "../src/vue";
 import { AskAI as LiteReact } from "../src/lite/react";
 import { claude, chatgpt } from "../src/builtins";
 import { placeMenu } from "../src/menu";
+import { loadMenu } from "../src/menu-lazy";
 import { parseAttrs } from "../src/element";
 import "../src/element";
 import * as lite from "../src/lite";
@@ -26,6 +27,9 @@ beforeEach(() => {
   window.open = open as any;
 });
 afterEach(() => vi.unstubAllGlobals());
+
+/** Resolves once the lazily loaded dropdown code is bound (the renderers subscribe to the same promise earlier, so they run first). */
+const ready = async () => { await loadMenu(); await Promise.resolve(); };
 
 const $ = <T extends HTMLElement = HTMLElement>(s: string, r: ParentNode = host) => r.querySelector<T>(s)!;
 const trigger = () => $("button.aai__trigger");
@@ -162,16 +166,16 @@ describe("markup parity: mount, React SSR, Vue SSR", () => {
 });
 
 describe("opening and closing (mount)", () => {
-  beforeEach(() => { mount("#h", base); });
+  beforeEach(async () => { mount("#h", base); await ready(); });
 
-  it("trigger click toggles", () => {
+  it("trigger click toggles", async () => {
     click(trigger());
     expect(isOpen()).toBe(true);
     click(trigger());
     expect(isOpen()).toBe(false);
     expect(menu().hasAttribute("hidden")).toBe(true);
   });
-  it("ArrowDown, Enter and Space open and focus the first item", () => {
+  it("ArrowDown, Enter and Space open and focus the first item", async () => {
     for (const k of ["ArrowDown", "Enter", " "]) {
       trigger().focus();
       const e = key(trigger(), k);
@@ -182,12 +186,12 @@ describe("opening and closing (mount)", () => {
       expect(isOpen()).toBe(false);
     }
   });
-  it("ArrowUp opens and focuses the last item", () => {
+  it("ArrowUp opens and focuses the last item", async () => {
     trigger().focus();
     key(trigger(), "ArrowUp");
     expect(active()).toBe(items()[3]);
   });
-  it("arrows wrap, Home/End jump", () => {
+  it("arrows wrap, Home/End jump", async () => {
     trigger().focus();
     key(trigger(), "ArrowDown");
     key(active()!, "ArrowDown");
@@ -201,7 +205,7 @@ describe("opening and closing (mount)", () => {
     key(active()!, "Home");
     expect(active()).toBe(items()[0]);
   });
-  it("type-ahead focuses the next item starting with the character", () => {
+  it("type-ahead focuses the next item starting with the character", async () => {
     trigger().focus();
     key(trigger(), "ArrowDown"); // Claude
     key(active()!, "m"); // Mistral
@@ -215,28 +219,28 @@ describe("opening and closing (mount)", () => {
     key(active()!, "z"); // no match: stays
     expect(active()).toBe(items()[1]);
   });
-  it("Escape closes and returns focus to the trigger", () => {
+  it("Escape closes and returns focus to the trigger", async () => {
     trigger().focus();
     key(trigger(), "ArrowDown");
     key(active()!, "Escape");
     expect(isOpen()).toBe(false);
     expect(active()).toBe(trigger());
   });
-  it("Tab closes without trapping focus", () => {
+  it("Tab closes without trapping focus", async () => {
     trigger().focus();
     key(trigger(), "ArrowDown");
     const e = key(active()!, "Tab");
     expect(e.defaultPrevented).toBe(false);
     expect(isOpen()).toBe(false);
   });
-  it("pointerdown outside closes, inside does not", () => {
+  it("pointerdown outside closes, inside does not", async () => {
     click(trigger());
     pointerdown(items()[0]);
     expect(isOpen()).toBe(true);
     pointerdown($("#other", document.body));
     expect(isOpen()).toBe(false);
   });
-  it("binds the document listener only while open and removes it on destroy", () => {
+  it("binds the document listener only while open and removes it on destroy", async () => {
     const add = vi.spyOn(document, "addEventListener"), rm = vi.spyOn(document, "removeEventListener");
     const pd = (s: any) => s.mock.calls.filter((c: any[]) => c[0] === "pointerdown");
     expect(pd(add)).toHaveLength(0);
@@ -245,7 +249,7 @@ describe("opening and closing (mount)", () => {
     click(trigger());
     expect(pd(rm)).toHaveLength(1);
     click(trigger());
-    const inst = mount("#h", base)!; // re-mount while open: old instance cleans up
+    const inst = mount("#h", base)!; await ready(); // re-mount while open: old instance cleans up
     expect(pd(rm).length).toBeGreaterThanOrEqual(2);
     click(trigger());
     inst.destroy();
@@ -255,14 +259,14 @@ describe("opening and closing (mount)", () => {
     expect(host.innerHTML).toBe("");
     add.mockRestore(); rm.mockRestore();
   });
-  it("destroy removes the root listeners", () => {
-    const inst = mount("#h", base)!;
+  it("destroy removes the root listeners", async () => {
+    const inst = mount("#h", base)!; await ready();
     inst.destroy();
     expect(host.innerHTML).toBe("");
     expect(host.dataset.layout).toBeUndefined();
   });
-  it("update() from menu to row re-renders and closes", () => {
-    const inst = mount("#h", base)!;
+  it("update() from menu to row re-renders and closes", async () => {
+    const inst = mount("#h", base)!; await ready();
     click(trigger());
     inst.update({ layout: "row" });
     expect(host.querySelector(".aai__trigger")).toBeNull();
@@ -273,11 +277,11 @@ describe("opening and closing (mount)", () => {
 });
 
 describe("activating an item", () => {
-  it("opens the service through the normal path, then closes", () => {
+  it("opens the service through the normal path, then closes", async () => {
     const onOpen = vi.fn();
     const ev = vi.fn();
     host.addEventListener("ask-ai:open", ev);
-    mount("#h", { ...base, onOpen, prompt: "Hello" });
+    mount("#h", { ...base, onOpen, prompt: "Hello" }); await ready();
     click(trigger());
     const a = items()[0];
     a.focus();
@@ -290,8 +294,8 @@ describe("activating an item", () => {
     expect(isOpen()).toBe(false);
     expect(active()).toBe(trigger());
   });
-  it("Space on an item activates it", () => {
-    mount("#h", { ...base, prompt: "Hello" });
+  it("Space on an item activates it", async () => {
+    mount("#h", { ...base, prompt: "Hello" }); await ready();
     trigger().focus();
     key(trigger(), "ArrowDown");
     key(active()!, "ArrowDown");
@@ -299,24 +303,24 @@ describe("activating an item", () => {
     expect(open.mock.calls[0][0]).toContain("https://gemini.google.com/");
     expect(isOpen()).toBe(false);
   });
-  it("modifier clicks keep the native href behaviour", () => {
+  it("modifier clicks keep the native href behaviour", async () => {
     const onOpen = vi.fn();
-    mount("#h", { ...base, onOpen });
+    mount("#h", { ...base, onOpen }); await ready();
     click(trigger());
     const e = click(items()[0], { ctrlKey: true });
     expect(e.defaultPrevented).toBe(false); // left to the browser
     expect(onOpen).not.toHaveBeenCalled();
   });
-  it("hover refreshes the href with the live question", () => {
-    mount("#h", { ...base, input: true });
+  it("hover refreshes the href with the live question", async () => {
+    mount("#h", { ...base, input: true }); await ready();
     $<HTMLInputElement>(".aai__input").value = "fresh q";
     items()[0].dispatchEvent(new Event("pointerover", { bubbles: true }));
     expect(decodeURIComponent(items()[0].getAttribute("href")!)).toContain("fresh q");
   });
-  it("Gemini copies the prompt and the hint stays visible after closing", () => {
+  it("Gemini copies the prompt and the hint stays visible after closing", async () => {
     const writeText = vi.fn(() => Promise.resolve());
     vi.stubGlobal("navigator", { clipboard: { writeText } });
-    mount("#h", { ...base, prompt: "Hello" });
+    mount("#h", { ...base, prompt: "Hello" }); await ready();
     click(trigger());
     click(items()[1]);
     expect(writeText).toHaveBeenCalledWith("Hello");
@@ -325,8 +329,8 @@ describe("activating an item", () => {
     expect(hint.textContent).toContain("Gemini");
     expect(menu().contains(hint)).toBe(false);
   });
-  it("an empty required question does not open, closes the menu and focuses the input", () => {
-    mount("#h", { ...base, input: true });
+  it("an empty required question does not open, closes the menu and focuses the input", async () => {
+    mount("#h", { ...base, input: true }); await ready();
     click(trigger());
     items()[0].focus();
     click(items()[0]);
@@ -335,8 +339,8 @@ describe("activating an item", () => {
     expect(active()).toBe($(".aai__input"));
     expect($(".aai__input").getAttribute("aria-invalid")).toBe("true");
   });
-  it("typing in the input does not trigger menu keys", () => {
-    mount("#h", { ...base, input: true });
+  it("typing in the input does not trigger menu keys", async () => {
+    mount("#h", { ...base, input: true }); await ready();
     const i = $(".aai__input");
     i.focus();
     key(i, "ArrowDown");
@@ -346,20 +350,20 @@ describe("activating an item", () => {
 
 describe("placement", () => {
   const rect = (r: Partial<DOMRect>) => () => ({ top: 0, bottom: 0, height: 0, ...r }) as DOMRect;
-  const setup = (tr: Partial<DOMRect>, menuHeight: number, innerHeight: number) => {
-    mount("#h", base);
+  const setup = async (tr: Partial<DOMRect>, menuHeight: number, innerHeight: number) => {
+    mount("#h", base); await ready();
     vi.stubGlobal("innerHeight", innerHeight);
     (window as any).innerHeight = innerHeight;
     trigger().getBoundingClientRect = rect(tr);
     menu().getBoundingClientRect = rect({ height: menuHeight });
   };
-  it("stays below when it fits", () => {
-    setup({ top: 100, bottom: 136 }, 250, 800);
+  it("stays below when it fits", async () => {
+    await setup({ top: 100, bottom: 136 }, 250, 800);
     click(trigger());
     expect(menu().hasAttribute("data-placement")).toBe(false);
   });
-  it("flips above when it does not fit below and there is more room above", () => {
-    setup({ top: 600, bottom: 636 }, 250, 700);
+  it("flips above when it does not fit below and there is more room above", async () => {
+    await setup({ top: 600, bottom: 636 }, 250, 700);
     click(trigger());
     expect(menu().getAttribute("data-placement")).toBe("top");
     click(trigger()); // closed
@@ -367,13 +371,13 @@ describe("placement", () => {
     click(trigger());
     expect(menu().hasAttribute("data-placement")).toBe(false);
   });
-  it("stays below when there is more room below, even if it does not fit", () => {
-    setup({ top: 100, bottom: 136 }, 900, 800);
+  it("stays below when there is more room below, even if it does not fit", async () => {
+    await setup({ top: 100, bottom: 136 }, 900, 800);
     click(trigger());
     expect(menu().hasAttribute("data-placement")).toBe(false);
   });
-  it("placeMenu offsets follow the trigger", () => {
-    mount("#h", base);
+  it("placeMenu offsets follow the trigger", async () => {
+    mount("#h", base); await ready();
     const t = trigger();
     Object.defineProperties(t, { offsetTop: { value: 5 }, offsetHeight: { value: 36 }, offsetLeft: { value: 100 }, offsetWidth: { value: 90 } });
     Object.defineProperty(host, "clientWidth", { value: 400 });
@@ -391,7 +395,7 @@ describe("React", () => {
   let root: Root;
   beforeEach(() => { root = createRoot(host); });
   afterEach(() => act(() => root.unmount()));
-  const render = (el: any) => act(() => root.render(el));
+  const render = async (el: any) => { await act(() => root.render(el)); await ready(); };
   const c = (el: Element, init?: MouseEventInit) => act(() => { click(el, init); });
   const k = (el: Element, key_: string) => act(() => { key(el, key_); });
 
@@ -447,14 +451,15 @@ describe("React", () => {
 });
 
 describe("Vue", () => {
-  const go = (props: any) => {
+  const go = async (props: any) => {
     const p = { ...props };
     const app = createApp({ render: () => vh(VueAskAI, p) });
     app.mount(host);
+    await ready();
     return { app, p };
   };
   it("opens, navigates, activates and closes", async () => {
-    go({ ...base, prompt: "Hello" });
+    await go({ ...base, prompt: "Hello" });
     click(trigger());
     expect(isOpen()).toBe(true);
     key(trigger(), "Escape");
@@ -469,22 +474,23 @@ describe("Vue", () => {
   it("stays open across re-renders", async () => {
     const l = ref("A");
     createApp({ render: () => vh(VueAskAI, { ...base, label: l.value }) }).mount(host);
+    await ready();
     click(trigger());
     l.value = "B";
     await nextTick();
     expect(trigger().textContent).toBe("B");
     expect(isOpen()).toBe(true);
   });
-  it("unmount removes the document listener", () => {
-    const { app } = go(base);
+  it("unmount removes the document listener", async () => {
+    const { app } = await go(base);
     click(trigger());
     const rm = vi.spyOn(document, "removeEventListener");
     app.unmount();
     expect(rm.mock.calls.some((x) => x[0] === "pointerdown")).toBe(true);
     rm.mockRestore();
   });
-  it("outside pointerdown closes", () => {
-    go(base);
+  it("outside pointerdown closes", async () => {
+    await go(base);
     click(trigger());
     pointerdown($("#other", document.body));
     expect(isOpen()).toBe(false);
@@ -492,7 +498,7 @@ describe("Vue", () => {
 });
 
 describe("element, lite and CDN", () => {
-  it("parseAttrs reads layout, menu-align and menu-icons (and data-*)", () => {
+  it("parseAttrs reads layout, menu-align and menu-icons (and data-*)", async () => {
     const d = document.createElement("div");
     d.setAttribute("layout", "menu");
     d.setAttribute("menu-align", "end");
@@ -506,6 +512,7 @@ describe("element, lite and CDN", () => {
   it("<ask-ai layout=menu> renders a working menu, and attribute changes switch layout", async () => {
     document.body.innerHTML = '<ask-ai id="e" services="claude,gemini" layout="menu" menu-align="end" menu-icons="none" context="none"></ask-ai>';
     const el = document.getElementById("e")!;
+    await ready();
     expect(el.dataset.layout).toBe("menu");
     expect(el.querySelector(".aai__stack")).toBeNull();
     expect(el.querySelector(".aai__menu")!.getAttribute("data-align")).toBe("end");
@@ -520,8 +527,8 @@ describe("element, lite and CDN", () => {
     await Promise.resolve();
     expect(el.querySelector(".aai__trigger")).toBeTruthy();
   });
-  it("lite mount supports the menu", () => {
-    lite.mount("#h", { services: [claude], layout: "menu" });
+  it("lite mount supports the menu", async () => {
+    lite.mount("#h", { services: [claude], layout: "menu" }); await ready();
     expect(trigger()).toBeTruthy();
     click(trigger());
     expect(isOpen()).toBe(true);

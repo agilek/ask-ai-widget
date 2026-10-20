@@ -210,7 +210,7 @@ describe("styles", () => {
     expect(document.head.firstElementChild!.id).toBe("ask-ai-style");
     first.remove();
   });
-  it("keeps the specificity invariants: <= (0,2,0) unless var-only, no !important", () => {
+  it("keeps the specificity invariants: base <= (0,2,0), state <= (0,3,0), unless var-only; no !important", () => {
     expect(checkCss(css)).toEqual([]);
   });
   it("the checker itself flags violations", () => {
@@ -221,7 +221,10 @@ describe("styles", () => {
     expect(checkCss(".a .b .c{--_x:1}")).toEqual([]); // custom properties only
     expect(checkCss(".a[data-x=y]{color:red}")).toEqual([]);
     expect(checkCss(".a:hover{color:red}")).toEqual([]);
-    expect(checkCss(".a[data-x=y]:hover{color:red}")).toHaveLength(1);
+    expect(checkCss(".a[data-x=y]:hover{color:red}")).toEqual([]); // state rules may reach (0,3,0)
+    expect(checkCss(".a .b:hover{color:red}")).toEqual([]);
+    expect(checkCss(".a[data-x=y] .b:hover:focus-visible{color:red}")).toHaveLength(1);
+    expect(checkCss(".a .b[data-x=y]{color:red}")).toHaveLength(1); // a base rule stays <= (0,2,0)
     expect(checkCss("@media (min-width:1px){.a{color:red}}")).toEqual([]);
     expect(specificity(":where(.a .b) .c")).toEqual([0, 1, 0]);
     expect(specificity('.a[data-x="y z"] svg::after')).toEqual([0, 2, 2]);
