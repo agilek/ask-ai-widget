@@ -1,0 +1,29 @@
+---
+import "ask-ai-widget/style.css";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>ask-ai-widget example (Astro)</title>
+  </head>
+  <body>
+    <h1>Docs</h1>
+
+    <h2>Attributes</h2>
+    <ask-ai label="Ask AI about this page" services="claude,chatgpt" prompt="Summarize this page."></ask-ai>
+
+    <h2>Function prompt (property)</h2>
+    <ask-ai id="docs" label="Ask AI about this page"></ask-ai>
+
+    <script>
+      import "ask-ai-widget/element"; // defines <ask-ai>
+      import type { AskAIElement } from "ask-ai-widget/element";
+
+      const el = document.querySelector<AskAIElement>("#docs")!;
+      el.prompt = (ctx) => `Explain "${ctx.title}" from these docs with a minimal example.`;
+      el.onOpen = ({ service }) => console.log("analytics: ask_ai_open", service);
+    </script>
+  </body>
+</html>

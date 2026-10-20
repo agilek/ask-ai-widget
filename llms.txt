@@ -1,0 +1,107 @@
+# ask-ai-widget
+
+> Tiny zero-dependency "Ask AI about this page" button row. Renders round logo buttons for ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral and DeepSeek; each opens that service in a new tab with a prefilled prompt. Works as a web component (`<ask-ai>`), vanilla JS, React, Vue and Svelte. No network calls, no tracking.
+
+Docs: https://github.com/agilek/ask-ai-widget#readme
+Playground: https://github.com/agilek/ask-ai-widget/blob/main/demo/index.html
+CDN: https://cdn.jsdelivr.net/npm/ask-ai-widget@0/dist/ask-ai.min.js
+
+## Which import to use
+
+- Plain HTML / any CMS / Astro / Angular: CDN script, then `<ask-ai>`. With a bundler: `import "ask-ai-widget/element"`.
+- Vanilla JS: `import { mount } from "ask-ai-widget"`
+- React / Next.js: `import { AskAI } from "ask-ai-widget/react"` (already has "use client")
+- Vue / Nuxt: `import { AskAI, plugin } from "ask-ai-widget/vue"`
+- Svelte (3, 4, 5) / SvelteKit: `import { askAI } from "ask-ai-widget/svelte"` (an action)
+- Smaller bundles: same names under `ask-ai-widget/lite`, `lite/element`, `lite/react`, `lite/vue`, `lite/svelte`, with service OBJECTS imported from `ask-ai-widget/services`.
+- Stylesheet file (optional, for SSR): `import "ask-ai-widget/style.css"`
+
+## Minimal snippets
+
+HTML:
+```html
+<script src="https://cdn.jsdelivr.net/npm/ask-ai-widget@0/dist/ask-ai.min.js"></script>
+<ask-ai services="claude,chatgpt,perplexity" label="Ask AI about Acme"></ask-ai>
+```
+
+Vanilla:
+```js
+import { mount } from "ask-ai-widget";
+mount("#ask-ai", { services: ["claude", "chatgpt"], label: "Ask AI about Acme" });
+```
+
+React:
+```tsx
+import { AskAI } from "ask-ai-widget/react";
+<AskAI services={["claude", "chatgpt"]} label="Ask AI about Acme" />
+```
+
+Vue:
+```vue
+<script setup>import { AskAI } from "ask-ai-widget/vue";</script>
+<template><AskAI :services="['claude', 'chatgpt']" label="Ask AI about Acme" /></template>
+```
+
+Svelte:
+```svelte
+<script>import { askAI } from "ask-ai-widget/svelte";</script>
+<div use:askAI={{ services: ["claude", "chatgpt"], label: "Ask AI about Acme" }}></div>
+```
+
+Lite (tree-shaken, only the logos you import):
+```js
+import { mount } from "ask-ai-widget/lite";
+import { claude, chatgpt } from "ask-ai-widget/services";
+mount("#ask-ai", { services: [claude, chatgpt] });
+```
+
+Let visitors type a question:
+```html
+<ask-ai input placeholder="Ask about Acme"></ask-ai>
+<!-- or bind your own field -->
+<input id="q"><ask-ai input="#q"></ask-ai>
+```
+JS equivalents: `input: true`, `input: { placeholder, required, multiline }`, `input: "#q"`, `input: element`, `input: { target: "#q" | element, required: false }` (bound field that may be empty).
+
+## Options (JS name / `<ask-ai>` attribute)
+
+- `services` / `services="a,b"`: keys or ServiceDef objects, in display order. Default: all 7 built-ins. Keys: chatgpt, claude, perplexity, gemini, grok, mistral, deepseek (case-insensitive).
+- `label` / `label`: text before the buttons.
+- `variant` (soft|outline|solid|ghost|brand|custom name), `shape` (circle|rounded|square), `size` (sm|md|lg), `theme` (light|dark|auto; default light).
+- `showLabels` / `show-labels`: boolean.
+- `prompt`, `instructions`, `context`, `template` / same-named attributes. Strings with `{question} {url} {title} {description} {selection} {service}` and any key of `vars`; or functions `(ctx) => string` (JS only). `context: false` / `context="none"` removes page context.
+- `references` / `references="/llms.txt, /docs"`: URLs the agent should read; relative URLs resolve against the page.
+- `vars` / `vars='{"k":"v"}'` (JSON), `page` / `page='{"url":"...","title":"..."}'` (JSON).
+- `maxLength` / `max-length`: default 4000 chars; too long: context is cut first, then references (whole lines), then instructions, and the prompt is hard-clipped last.
+- `input` / `input`, `placeholder`, `required`, `multiline` (`input="#q" required="false"` = bound field, empty allowed); `submitService` / `submit-service`.
+- `strings` / `strings='{"ask":"Frage {service}"}'` (JSON): translates the widget's own texts. Keys `ask` (button aria-label/title, default "Ask {service}"), `question` (input aria-label, default "Your question"), `copied` (clipboard hint, default "Prompt copied — paste it into {service}"). `{service}` = service label.
+- `className` / `class-name`; `unstyled` / `unstyled`.
+- `onOpen(detail)` (JS property or prop only). Vue: `@open`. DOM event `ask-ai:open` (bubbles) with `detail = { service, prompt, url }`.
+- React-only props: `question`, `defaultQuestion`, `onQuestionChange`. Vue-only: `v-model:question`.
+
+Default prompt: "Explain this page." (or "{question}" when `input` is set). Default context: "Context: {title} — {url}". Default template: "{instructions}\n\n{prompt}\n\n{context}\n\n{references}".
+
+## Services
+
+Each opens `<url>?q=<encoded prompt>`: chatgpt https://chatgpt.com/, claude https://claude.ai/new, perplexity https://www.perplexity.ai/search, grok https://grok.com/, mistral https://chat.mistral.ai/chat (prefill unverified), gemini https://gemini.google.com/app and deepseek https://chat.deepseek.com/ (no URL prefill: the prompt is copied to the clipboard and a hint is shown).
+Custom: `registerService({ key, label, url, param, icon?, color?, prefill? })` or pass such an object inline in `services`. `icon` is SVG path data for a 24x24 viewBox.
+
+## Common mistakes
+
+1. Prompts must be synchronous. Do not pass async functions; the tab is opened inside the click handler so popup blockers stay quiet.
+2. The `lite*` entries have NO built-in services. `services: ["claude"]` fails there (warns and renders nothing); pass objects imported from `ask-ai-widget/services`, or call `registerService(claude)` first.
+3. On the `<ask-ai>` element use the `class-name` attribute for the `className` option (or plain `class`). `el.className` is the DOM's own.
+4. For SSR (Next.js, Nuxt, SvelteKit) import `ask-ai-widget/style.css` to avoid unstyled flash, and pass `page={{ url, title }}` (React) / `:page` (Vue) so server hrefs match the client.
+5. In Next.js Server Components you cannot pass functions to `AskAI`; use string templates, or wrap it in your own "use client" component for `onOpen`/function props.
+6. `ask-ai-widget` exports `registry` (the object of services added via `registerService`, empty by default). The built-in service objects live in `ask-ai-widget/services`.
+7. Both element entries (`element`, `lite/element`) define the same `<ask-ai>` tag; import only one per page.
+8. Set the public `--aai-*` custom properties anywhere: `:root`, an ancestor, the widget or inline all work (the library never declares them; it reads `var(--aai-x, private default)`). Do not use the private `--_*` names. `a:visited` / `.prose a` rules (specificity 0,1,1) can still recolor buttons; set `--aai-fg`.
+9. Unknown `{placeholders}` render as an empty string. A literal `{text}` in a prompt vanishes.
+10. A bare selector or element in `input` is always required (empty question blocks opening). To allow empty, use `input: { target: "#q", required: false }`; the built-in field uses `input: { required: false }`.
+
+## Styling hooks
+
+Root: `.aai` (the `<ask-ai>` element itself) with `data-variant`, `data-shape`, `data-size`, `data-theme`. Children: `.aai__label`, `.aai__form`, `.aai__input`, `.aai__list`, `.aai__btn` (also `.aai__btn--<key>` and `[data-service]`), `.aai__icon`, `.aai__name`, `.aai__hint`.
+Override in 3 tiers: (1) set `--aai-*` anywhere; (2) target the classes: rules use one class plus at most one pseudo-class/attribute (specificity <= 0,2,0, no `!important`), so they beat `a {}` / `svg {}` resets and lose to any later class selector; (3) `unstyled` (skip the stylesheet). The `<style>` is prepended to `<head>`.
+Custom properties: `--aai-gap` (8px), `--aai-btn-size` (36px), `--aai-icon-size` (18px), `--aai-radius` (999px), `--aai-bg` (#f1f1f3), `--aai-bg-hover`, `--aai-fg` (#1a1a1a), `--aai-border`, `--aai-shadow`, `--aai-label-color`, `--aai-font`, `--aai-font-size`, `--aai-focus`, `--aai-transition`, `--aai-line`, `--aai-tint`, `--aai-input-bg`, `--aai-input-fg`, `--aai-brand` (set per button from the service color).
+Custom preset: add `.aai[data-variant="mine"] { --aai-bg: ...; --aai-fg: ...; }` and use `variant="mine"`.

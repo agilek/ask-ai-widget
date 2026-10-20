@@ -1,0 +1,200 @@
+{
+  "name": "ask-ai-widget",
+  "version": "0.1.0",
+  "description": "Tiny zero-dependency \"Ask AI about this page\" button row: opens ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral and DeepSeek with a prefilled prompt. Web component, React, Vue and Svelte.",
+  "license": "MIT",
+  "homepage": "https://github.com/agilek/ask-ai-widget#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agilek/ask-ai-widget.git"
+  },
+  "bugs": {
+    "url": "https://github.com/agilek/ask-ai-widget/issues"
+  },
+  "keywords": [
+    "ask-ai",
+    "ai",
+    "chatgpt",
+    "claude",
+    "perplexity",
+    "gemini",
+    "grok",
+    "mistral",
+    "deepseek",
+    "llm",
+    "share",
+    "web-component",
+    "custom-element",
+    "react",
+    "vue",
+    "svelte",
+    "widget",
+    "prompt",
+    "llms-txt"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "./dist/ask-ai.min.js",
+    "./dist/element.*",
+    "./dist/lite/element.*",
+    "*.css"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "style.css",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "llms.txt"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./element": {
+      "import": {
+        "types": "./dist/element.d.ts",
+        "default": "./dist/element.js"
+      },
+      "require": {
+        "types": "./dist/element.d.cts",
+        "default": "./dist/element.cjs"
+      }
+    },
+    "./react": {
+      "import": {
+        "types": "./dist/react.d.ts",
+        "default": "./dist/react.js"
+      },
+      "require": {
+        "types": "./dist/react.d.cts",
+        "default": "./dist/react.cjs"
+      }
+    },
+    "./vue": {
+      "import": {
+        "types": "./dist/vue.d.ts",
+        "default": "./dist/vue.js"
+      },
+      "require": {
+        "types": "./dist/vue.d.cts",
+        "default": "./dist/vue.cjs"
+      }
+    },
+    "./svelte": {
+      "import": {
+        "types": "./dist/svelte.d.ts",
+        "default": "./dist/svelte.js"
+      },
+      "require": {
+        "types": "./dist/svelte.d.cts",
+        "default": "./dist/svelte.cjs"
+      }
+    },
+    "./lite": {
+      "import": {
+        "types": "./dist/lite/index.d.ts",
+        "default": "./dist/lite/index.js"
+      },
+      "require": {
+        "types": "./dist/lite/index.d.cts",
+        "default": "./dist/lite/index.cjs"
+      }
+    },
+    "./lite/element": {
+      "import": {
+        "types": "./dist/lite/element.d.ts",
+        "default": "./dist/lite/element.js"
+      },
+      "require": {
+        "types": "./dist/lite/element.d.cts",
+        "default": "./dist/lite/element.cjs"
+      }
+    },
+    "./lite/react": {
+      "import": {
+        "types": "./dist/lite/react.d.ts",
+        "default": "./dist/lite/react.js"
+      },
+      "require": {
+        "types": "./dist/lite/react.d.cts",
+        "default": "./dist/lite/react.cjs"
+      }
+    },
+    "./lite/vue": {
+      "import": {
+        "types": "./dist/lite/vue.d.ts",
+        "default": "./dist/lite/vue.js"
+      },
+      "require": {
+        "types": "./dist/lite/vue.d.cts",
+        "default": "./dist/lite/vue.cjs"
+      }
+    },
+    "./lite/svelte": {
+      "import": {
+        "types": "./dist/lite/svelte.d.ts",
+        "default": "./dist/lite/svelte.js"
+      },
+      "require": {
+        "types": "./dist/lite/svelte.d.cts",
+        "default": "./dist/lite/svelte.cjs"
+      }
+    },
+    "./services": {
+      "import": {
+        "types": "./dist/services.d.ts",
+        "default": "./dist/services.js"
+      },
+      "require": {
+        "types": "./dist/services.d.cts",
+        "default": "./dist/services.cjs"
+      }
+    },
+    "./style.css": "./style.css"
+  },
+  "scripts": {
+    "build": "tsup && node scripts/build-css.mjs",
+    "test": "vitest run",
+    "size": "node scripts/size.mjs",
+    "dev": "tsup --watch"
+  },
+  "peerDependencies": {
+    "react": ">=17",
+    "svelte": ">=3",
+    "vue": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vue/server-renderer": "^3.5.44",
+    "happy-dom": "^21.0.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tsup": "^9.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5",
+    "vue": "^3.5.44"
+  }
+}

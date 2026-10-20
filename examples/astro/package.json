@@ -1,0 +1,14 @@
+{
+  "name": "example-astro",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "ask-ai-widget": "file:../..",
+    "astro": "^5.0.0"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules
+dist
+examples/*/node_modules
+examples/*/dist
+examples/*/.next
+examples/*/.svelte-kit
+examples/*/.astro
+examples/*/next-env.d.ts
+examples/*/package-lock.json
+_site

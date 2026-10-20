@@ -1,0 +1,119 @@
+/*
+ * Public --aai-* properties are never declared here: presets, sizes, shapes and themes set private --_x
+ * properties on the root, and every rule reads var(--aai-x, var(--_x)). So a --aai-* value set anywhere
+ * (:root, an ancestor, the widget, an inline style) wins.
+ * Specificity: structural rules use one class (plus at most one pseudo-class or attribute), which beats
+ * element resets such as `a {}` or `svg {}` and still loses to any later class selector. Rules that only
+ * set custom properties may be more specific. No ids, no !important.
+ * Source of truth: this file is minified into the bundle (tsup.config.ts) and written to /style.css.
+ */
+.aai {
+  --_s: 36px;
+  --_i: 18px;
+  --_r: 999px;
+  --_b: #f1f1f3;
+  --_h: #e5e5e9;
+  --_f: #1a1a1a;
+  --_o: transparent;
+  --_m: #8a8a8f;
+  --_u: #2f6df6;
+  --_l: #d4d4d9;
+  --_t: rgba(0, 0, 0, .06);
+  --_p: #fff;
+  --_q: #1a1a1a;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--aai-gap, 8px);
+  box-sizing: border-box;
+  font-family: var(--aai-font, inherit);
+  font-size: var(--aai-font-size, 14px);
+  line-height: 1.3;
+}
+.aai[data-size=sm] { --_s: 28px; --_i: 14px }
+.aai[data-size=lg] { --_s: 44px; --_i: 22px }
+.aai[data-shape=rounded] { --_r: 10px }
+.aai[data-shape=square] { --_r: 4px }
+
+/* dark theme: explicit, or following the OS for theme=auto */
+.aai[data-theme=dark] {
+  --_b: #2a2a2e;
+  --_h: #38383d;
+  --_f: #f2f2f2;
+  --_m: #9a9aa0;
+  --_l: #46464c;
+  --_t: rgba(255, 255, 255, .1);
+  --_p: #1c1c1e;
+  --_q: #f2f2f2;
+  --_u: #6ea0ff;
+}
+@media (prefers-color-scheme: dark) {
+  .aai[data-theme=auto] {
+    --_b: #2a2a2e;
+    --_h: #38383d;
+    --_f: #f2f2f2;
+    --_m: #9a9aa0;
+    --_l: #46464c;
+    --_t: rgba(255, 255, 255, .1);
+    --_p: #1c1c1e;
+    --_q: #f2f2f2;
+    --_u: #6ea0ff;
+  }
+}
+
+.aai[data-variant=outline] { --_b: transparent; --_h: var(--aai-tint, var(--_t)); --_o: var(--aai-line, var(--_l)) }
+.aai[data-variant=ghost] { --_b: transparent; --_h: var(--aai-tint, var(--_t)) }
+.aai[data-variant=solid] { --_b: #111; --_h: #333; --_f: #fff }
+.aai[data-variant=solid][data-theme=dark] { --_b: #f2f2f2; --_h: #fff; --_f: #111 }
+@media (prefers-color-scheme: dark) {
+  .aai[data-variant=solid][data-theme=auto] { --_b: #f2f2f2; --_h: #fff; --_f: #111 }
+}
+.aai[data-variant=brand] .aai__btn { --_k: var(--aai-brand) }
+
+.aai__label { color: var(--aai-label-color, var(--_m)) }
+.aai__form { flex: 1 1 220px; margin: 0 }
+.aai__input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: var(--aai-btn-size, var(--_s));
+  margin: 0;
+  padding: 6px 14px;
+  font: inherit;
+  color: var(--aai-input-fg, var(--_q));
+  background: var(--aai-input-bg, var(--_p));
+  border: 1px solid var(--aai-line, var(--_l));
+  border-radius: min(var(--aai-radius, var(--_r)), 18px);
+}
+.aai__input:focus-visible { outline: 2px solid var(--aai-focus, var(--_u)); outline-offset: 1px }
+.aai__input[aria-invalid=true] { border-color: #e5484d }
+.aai__list { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--aai-gap, 8px) }
+.aai__btn {
+  box-sizing: border-box;
+  display: inline-grid;
+  grid-auto-flow: column;
+  place-items: center;
+  gap: 6px;
+  min-width: var(--aai-btn-size, var(--_s));
+  height: var(--aai-btn-size, var(--_s));
+  padding: 0 calc((var(--aai-btn-size, var(--_s)) - var(--aai-icon-size, var(--_i))) / 2);
+  color: var(--aai-fg, var(--_k, var(--_f)));
+  background: var(--aai-bg, var(--_b));
+  border: 1px solid var(--aai-border, var(--_o));
+  border-radius: var(--aai-radius, var(--_r));
+  box-shadow: var(--aai-shadow, none);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--aai-transition, .15s ease), transform var(--aai-transition, .15s ease);
+}
+.aai__btn:hover { background: var(--aai-bg-hover, var(--_h)) }
+.aai__btn:active { transform: scale(.96) }
+.aai__btn:focus-visible { outline: 2px solid var(--aai-focus, var(--_u)); outline-offset: 2px }
+.aai__icon { display: block; width: var(--aai-icon-size, var(--_i)); height: var(--aai-icon-size, var(--_i)) }
+.aai__name { font-size: .9em; font-weight: 500; white-space: nowrap }
+.aai__hint { flex-basis: 100%; font-size: .85em; color: var(--aai-label-color, var(--_m)) }
+.aai__hint:empty { display: none }
+@media (prefers-reduced-motion: reduce) {
+  .aai__btn { transition: none }
+  .aai__btn:active { transform: none }
+}

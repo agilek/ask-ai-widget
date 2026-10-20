@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ask-ai-widget example (CDN)</title>
+  <meta name="description" content="Example page for ask-ai-widget." />
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 640px; margin: 3rem auto; padding: 0 1rem; }
+    section { margin: 2.5rem 0; }
+    /* Theme with --aai-* variables; no other CSS needed. */
+    .brand-demo {
+      --aai-btn-size: 44px;
+      --aai-icon-size: 22px;
+      --aai-bg: #101828;
+      --aai-bg-hover: #1d2939;
+      --aai-fg: #fff;
+      --aai-label-color: #475467;
+    }
+  </style>
+</head>
+<body>
+  <h1>Docs</h1>
+
+  <section>
+    <h2>1. Predefined prompt</h2>
+    <div id="predefined"></div>
+  </section>
+
+  <section>
+    <h2>2. User question</h2>
+    <div id="question"></div>
+  </section>
+
+  <section>
+    <h2>3. Zero JS (<code>data-ask-ai</code>), custom CSS</h2>
+    <div
+      class="brand-demo"
+      data-ask-ai
+      data-label="Ask AI about this page"
+      data-services="claude,chatgpt,perplexity"
+      data-prompt="Summarize this page in three bullet points."
+    ></div>
+  </section>
+
+  <!-- Global `AskAI`; also defines <ask-ai> and auto-mounts [data-ask-ai]. -->
+  <script src="../../dist/ask-ai.min.js"></script>
+  <script>
+    AskAI.mount("#predefined", {
+      label: "Ask AI about this page",
+      prompt: "Explain this page and show a minimal example.",
+      onOpen: ({ service, url }) => console.log("opened", service, url),
+    });
+
+    AskAI.mount("#question", {
+      label: "Ask AI about this page",
+      input: { placeholder: "Ask anything about this page..." },
+      prompt: "Answer using this page: {question}",
+    });
+  </script>
+</body>
+</html>
