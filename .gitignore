@@ -9,3 +9,4 @@ examples/*/next-env.d.ts
 examples/*/package-lock.json
 _site
 .DS_Store
+.playwright-mcp
