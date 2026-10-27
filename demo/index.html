@@ -34,8 +34,11 @@
       <div class="hero-widget"><div id="hero"></div></div>
     </div>
     <div class="cta">
-      <button class="btn primary" type="button" data-copy="npm i ask-ai-widget"><code>npm i ask-ai-widget</code> <span class="cl">Copy</span></button>
-      <a class="btn" href="playground.html">Open the playground</a>
+      <button class="btn primary" type="button" data-copy="Add the ask-ai-widget &quot;Ask AI about this page&quot; button row to this project.&#10;1. Install it: npm i ask-ai-widget&#10;2. Read https://github.com/agilek/ask-ai-widget/blob/main/llms.txt and pick the import that matches this project's framework (HTML with the CDN script, React, Vue or Svelte).&#10;3. Render it with services claude, chatgpt and perplexity, and a label that fits the site.&#10;4. Keep it SSR-safe and do not add any other dependencies." data-key="a" aria-keyshortcuts="A"><span class="lbl"><span class="idle">Copy agent instructions</span><span class="done" aria-hidden="true"><svg class="ok" viewBox="0 0 16 16" width="14" height="14"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Copied</span></span> <kbd>A</kbd></button>
+      <a class="btn" href="playground.html" data-key="o" aria-keyshortcuts="O"><span class="lbl">Open the playground</span> <kbd>O</kbd></a>
+    </div>
+    <div class="dev">
+      <button class="btn" type="button" data-copy="npm i ask-ai-widget" data-key="c" aria-keyshortcuts="C"><span class="lbl"><span class="idle"><code>npm i ask-ai-widget</code></span><span class="done" aria-hidden="true"><svg class="ok" viewBox="0 0 16 16" width="14" height="14"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Copied</span></span> <kbd>C</kbd></button>
     </div>
     <p class="facts" title="Lite entry with 2 services; the full CDN build with all 7 logos is 12.16 kB gzip"><b>From 7.55 kB</b> gzip · <b>0</b> runtime dependencies · HTML, React, Vue, Svelte</p>
   </div>
@@ -58,10 +61,33 @@ if (!window.AskAI) {
   throw new Error("ask-ai-widget: dist/ask-ai.min.js not found. Run `npm run build`.");
 }
 AskAI.mount("#hero", { label: "Ask AI about this page", theme: "auto", size: "md" });
+function copy(text) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+  return new Promise((ok, fail) => {
+    const t = document.createElement("textarea");
+    t.value = text; t.setAttribute("readonly", ""); t.style.cssText = "position:fixed;opacity:0";
+    document.body.append(t); t.select();
+    try { document.execCommand("copy") ? ok() : fail(); } catch (e) { fail(e); } finally { t.remove(); }
+  });
+}
 document.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", () => {
-  const cl = b.querySelector(".cl"), idle = cl.textContent;
-  navigator.clipboard?.writeText(b.dataset.copy).then(() => { cl.textContent = "Copied"; setTimeout(() => (cl.textContent = idle), 1400); });
+  // "Copied" shares the label's grid cell, so the button never changes size
+  copy(b.dataset.copy).then(() => { b.classList.add("copied"); setTimeout(() => b.classList.remove("copied"), 1400); }, () => {});
 }));
+// single-key shortcuts; ignored with modifiers and while typing
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.repeat) return;
+  const t = e.target;
+  if (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+  const b = document.querySelector('main [data-key="' + e.key.toLowerCase() + '"]');
+  if (b) { e.preventDefault(); b.classList.add("pressed"); b.click(); }
+});
+// release the pressed look with the key, but never faster than a visible tap
+document.addEventListener("keyup", (e) => {
+  const b = document.querySelector('main [data-key="' + e.key.toLowerCase() + '"].pressed');
+  if (b) setTimeout(() => b.classList.remove("pressed"), 110);
+});
+window.addEventListener("blur", () => document.querySelectorAll("main .pressed").forEach((b) => b.classList.remove("pressed")));
 </script>
 </body>
 </html>
