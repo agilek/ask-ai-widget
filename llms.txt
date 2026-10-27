@@ -3,7 +3,7 @@
 > Tiny zero-dependency "Ask AI about this page" button row. Renders round logo buttons for ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral and DeepSeek; each opens that service in a new tab with a prefilled prompt. Works as a web component (`<ask-ai>`), vanilla JS, React, Vue and Svelte. No network calls, no tracking.
 
 Docs: https://github.com/agilek/ask-ai-widget#readme
-Playground: https://github.com/agilek/ask-ai-widget/blob/main/demo/index.html
+Playground: https://github.com/agilek/ask-ai-widget/blob/main/demo/playground.html
 CDN: https://cdn.jsdelivr.net/npm/ask-ai-widget@0/dist/ask-ai.min.js
 
 ## Which import to use

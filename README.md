@@ -9,7 +9,7 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/types-included-3178c6)](#api-reference)
 
-**[Try the playground](demo/index.html)** - configure the widget live, see the exact prompt it sends, and copy the snippet for HTML, vanilla JS, React, Vue or Svelte.
+**[Try the playground](demo/playground.html)** - configure the widget live, see the exact prompt it sends, and copy the snippet for HTML, vanilla JS, React, Vue or Svelte.
 
 ## Quick start in 30 seconds
 
@@ -357,7 +357,7 @@ Use these sources:
 - https://example.com/docs/api
 ```
 
-Preview any configuration without clicking: `AskAI.buildPrompt(opts, AskAI.getContext(opts, question, serviceKey))` (the same functions are exported from `ask-ai-widget`), or use the [playground](demo/index.html).
+Preview any configuration without clicking: `AskAI.buildPrompt(opts, AskAI.getContext(opts, question, serviceKey))` (the same functions are exported from `ask-ai-widget`), or use the [playground](demo/playground.html).
 
 ## Services
 
