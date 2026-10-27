@@ -12,14 +12,14 @@ Guidance for coding agents working on this repository. For using the library, re
 - `src/prompt.ts` (context, templates, truncation), `src/url.ts`, `src/open.ts` (activate: validation, clipboard, `window.open`), `src/model.ts` (`getItems`, `rootAttrs`, `str` for the `strings` option, menu-layout helpers, shared by every renderer), `src/menu.ts` (dropdown behaviour: open/close, keyboard, outside press, placement, plus `injectMenuStyles`; LAZY: state lives in the DOM) and `src/menu-lazy.ts` (`attachMenu`: the only code that may `import("./menu")`, used by every renderer), `src/mount.ts` (vanilla renderer), `src/react-impl.ts`, `src/vue-impl.ts`, `src/svelte-impl.ts`, `src/element-impl.ts` (custom element base + `parseAttrs`).
 - `src/registry.ts` (the `registry` object: registered services only), `src/builtins.ts` (one const per service), `src/icons.ts` (generated), `src/normalize.ts` (`withBuiltins`) and `src/lite-normalize.ts` (`withRegistry`).
 - `src/cdn.ts`: IIFE entry (global `AskAI`, `init()` for `[data-ask-ai]`). `src/style.css`: the core stylesheet source; `src/menu.css`: the dropdown rules (loaded with menu.ts).
-- `scripts/`: `build-css.mjs`, `css-check.mjs`, `css-string.mjs`, `size.mjs`, `compact-icons.mjs`, `icons-src/*.svg`. `test/`: vitest + happy-dom. `demo/index.html`: playground. `examples/`: framework examples.
+- `scripts/`: `build-css.mjs`, `css-check.mjs`, `css-string.mjs`, `size.mjs`, `compact-icons.mjs`, `icons-src/*.svg`. `test/`: vitest + happy-dom. `examples/`: framework examples. The demo, playground and gallery site is NOT in this repo: it lives in the acler-cz repo at `public/ask-ai/` (served at https://acler.cz/ask-ai/) and loads the published package from jsDelivr.
 - Root `style.css` (core + menu), `style-row.css` (core only) and `dist/` are build output.
 
 ## Commands
 
 ```bash
 npm install
-npm run build   # tsup + style.css (must run before size and the demo)
+npm run build   # tsup + style.css (must run before size)
 npm test        # vitest
 npm run size    # bundles real consumer imports; fails on budget / tree-shaking regressions
 npm run check:label      # label position geometry in Chromium (left/top/right/bottom, row and question mode, 640px and 375px)
@@ -50,7 +50,7 @@ Run `npm run build && npm test && npm run size` (and `npm run check:contrast` af
 3. In `src/builtins.ts` add `export const <key>: ServiceDef = /* @__PURE__ */ def("<key>", "Label", "https://...", <key>Icon, "#brandcolor", prefill?)` and append it to `builtins`. Use `prefill: false` when the URL parameter is not honoured (the prompt is then copied to the clipboard).
 4. Add the key to the `BUILTIN` regex in `src/lite-normalize.ts` and to `others` / the icon checks in `scripts/size.mjs`.
 5. Add tests: `test/builtins.test.ts` (order, export list), `test/core.test.ts` / `mount.test.ts` (URL, clipboard behaviour), `test/lite.test.ts`.
-6. Update the README services table and counts, `llms.txt`, the playground (it reads services from the library), the `package.json` description/keywords, and the `ServiceKey` union in `src/types.ts`.
+6. Update the README services table and counts, `llms.txt`, the playground in the acler-cz repo (`public/ask-ai/`, it reads services from the library), the `package.json` description/keywords, and the `ServiceKey` union in `src/types.ts`.
 7. `npm run build && npm test && npm run size`.
 
 ## Style

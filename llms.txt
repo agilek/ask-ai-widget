@@ -1,14 +1,16 @@
 # ask-ai-widget
 
-> Tiny zero-dependency "Ask AI about this page" button row. Renders round logo buttons for ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral and DeepSeek; each opens that service in a new tab with a prefilled prompt. Works as a web component (`<ask-ai>`), vanilla JS, React, Vue and Svelte. No network calls, no tracking.
+> Zero-dependency "Ask AI about this page" button row (also called "Open in ChatGPT" or "Summarize with AI" buttons). Each button opens ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral or DeepSeek in a new tab with a prompt containing the page title and URL (Gemini and DeepSeek: the prompt is copied to the clipboard instead). One `<script>` + `<ask-ai>` tag, or React, Vue and Svelte components. No backend, no API keys, no network calls, no tracking. MIT.
 
 Docs: https://github.com/agilek/ask-ai-widget#readme
-Playground: https://github.com/agilek/ask-ai-widget/blob/main/demo/playground.html
+Live demo: https://acler.cz/ask-ai/
+Playground (configure visually, copy a snippet): https://acler.cz/ask-ai/playground
 CDN: https://cdn.jsdelivr.net/npm/ask-ai-widget@0/dist/ask-ai.min.js
 
 ## Which import to use
 
-- Plain HTML / any CMS / Astro / Angular: CDN script, then `<ask-ai>`. With a bundler: `import "ask-ai-widget/element"`.
+- No build step (plain HTML, WordPress, Webflow, Shopify, Ghost, Squarespace): CDN script once per page + an `<ask-ai>` tag. Nothing to install.
+- Bundler without a framework wrapper (Astro, Angular, Lit, Solid): `import "ask-ai-widget/element"` and write `<ask-ai>`. Angular needs `CUSTOM_ELEMENTS_SCHEMA`.
 - Vanilla JS: `import { mount } from "ask-ai-widget"`
 - React / Next.js: `import { AskAI } from "ask-ai-widget/react"` (already has "use client")
 - Vue / Nuxt: `import { AskAI, plugin } from "ask-ai-widget/vue"`
@@ -24,7 +26,7 @@ HTML:
 <ask-ai services="claude,chatgpt,perplexity" label="Ask AI about Acme"></ask-ai>
 ```
 
-Vanilla:
+Vanilla (the target element must exist before `mount()` runs; it returns null otherwise):
 ```js
 import { mount } from "ask-ai-widget";
 mount("#ask-ai", { services: ["claude", "chatgpt"], label: "Ask AI about Acme" });
@@ -55,6 +57,8 @@ import { claude, chatgpt } from "ask-ai-widget/services";
 mount("#ask-ai", { services: [claude, chatgpt] });
 ```
 
+CMS recipes (no build step): WordPress: add the script through a header/footer code plugin or the theme and put the `<ask-ai>` tag in a Custom HTML block. Shopify: script in `theme.liquid`, tag in a Custom Liquid section. Ghost: code injection plus an HTML card. Webflow: custom code in the footer plus an Embed element. Squarespace: Code Injection plus a Code block.
+
 Dropdown instead of a row:
 ```html
 <ask-ai layout="menu" label="Ask AI" menu-align="end"></ask-ai>
@@ -67,6 +71,7 @@ Let visitors type a question:
 <!-- or bind your own field -->
 <input id="q"><ask-ai input="#q"></ask-ai>
 ```
+The `input` attribute is read as a selector only when it starts with `#` or `.`; anything else (`input="[name=q]"`) renders the built-in field instead.
 JS equivalents: `input: true`, `input: { placeholder, required, multiline }`, `input: "#q"`, `input: element`, `input: { target: "#q" | element, required: false }` (bound field that may be empty).
 
 ## Options (JS name / `<ask-ai>` attribute)
@@ -84,6 +89,7 @@ JS equivalents: `input: true`, `input: { placeholder, required, multiline }`, `i
 - `input` / `input`, `placeholder`, `required`, `multiline` (`input="#q" required="false"` = bound field, empty allowed); `submitService` / `submit-service`.
 - `strings` / `strings='{"ask":"Frage {service}"}'` (JSON): translates the widget's own texts. Keys `ask` (button aria-label/title, default "Ask {service}"), `question` (input aria-label, default "Your question"), `copied` (clipboard hint, default "Prompt copied — paste it into {service}"), `menu` (trigger text of the menu layout when no `label`, default "Ask AI"). `{service}` = service label.
 - `className` / `class-name`; `unstyled` / `unstyled`.
+- With the CDN auto-mount every option also works as `data-<name>` on any element with `data-ask-ai`: `<div data-ask-ai data-services="claude,chatgpt"></div>`. Call `AskAI.init()` after inserting more such elements.
 - `onOpen(detail)` (JS property or prop only). Vue: `@open`. DOM event `ask-ai:open` (bubbles) with `detail = { service, prompt, url }`.
 - React-only props: `question`, `defaultQuestion`, `onQuestionChange`. Vue-only: `v-model:question`.
 
@@ -91,7 +97,7 @@ Default prompt: "Explain this page." (or "{question}" when `input` is set). Defa
 
 ## Services
 
-Each opens `<url>?q=<encoded prompt>`: chatgpt https://chatgpt.com/, claude https://claude.ai/new, perplexity https://www.perplexity.ai/search, grok https://grok.com/, mistral https://chat.mistral.ai/chat (prefill unverified), gemini https://gemini.google.com/app and deepseek https://chat.deepseek.com/ (no URL prefill: the prompt is copied to the clipboard and a hint is shown).
+Each opens `<url>?q=<encoded prompt>`: chatgpt https://chatgpt.com/, claude https://claude.ai/new, perplexity https://www.perplexity.ai/search, grok https://grok.com/, mistral https://chat.mistral.ai/chat (prefill unverified), gemini https://gemini.google.com/app and deepseek https://chat.deepseek.com/ (no URL prefill: the prompt is copied to the clipboard and a hint is shown; the clipboard needs HTTPS).
 Custom: `registerService({ key, label, url, param, icon?, color?, prefill? })` or pass such an object inline in `services`. `icon` is SVG path data for a 24x24 viewBox.
 
 ## Common mistakes
@@ -103,9 +109,12 @@ Custom: `registerService({ key, label, url, param, icon?, color?, prefill? })` o
 5. In Next.js Server Components you cannot pass functions to `AskAI`; use string templates, or wrap it in your own "use client" component for `onOpen`/function props.
 6. `ask-ai-widget` exports `registry` (the object of services added via `registerService`, empty by default). The built-in service objects live in `ask-ai-widget/services`.
 7. Both element entries (`element`, `lite/element`) define the same `<ask-ai>` tag; import only one per page.
-8. Set the public `--aai-*` custom properties anywhere: `:root`, an ancestor, the widget or inline all work (the library never declares them; it reads `var(--aai-x, private default)`). Do not use the private `--_*` names. `a:visited` / `.prose a` rules (specificity 0,1,1) can still recolor buttons; set `--aai-fg`.
+8. Set the public `--aai-*` custom properties anywhere: `:root`, an ancestor, the widget or inline all work (the library never declares them; it reads `var(--aai-x, private default)`). Do not use the private `--_*` names. Host rules on bare elements (`a:visited`, `.prose a`, `button:hover`) do not leak in. A host rule with an id or at least two classes plus an element (`#content a`, `.post .body a`) can beat the button rule; scope it (`a:not(.aai__btn)`), because `--aai-fg` cannot help when the host sets `color` directly.
 9. Unknown `{placeholders}` render as an empty string. A literal `{text}` in a prompt vanishes.
 10. A bare selector or element in `input` is always required (empty question blocks opening). To allow empty, use `input: { target: "#q", required: false }`; the built-in field uses `input: { required: false }`.
+11. Strict CSP: the widget injects a `<style>`. Without `style-src 'unsafe-inline'`, set `unstyled` and load the stylesheet yourself (`<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ask-ai-widget@0/style.css">`). `script-src` must allow cdn.jsdelivr.net when using the CDN.
+12. Inside an iframe embed the widget sees the iframe's URL: set `page='{"url":"https://…","title":"…"}'`.
+13. In Vue and React templates prefer the framework wrapper over a raw `<ask-ai>`: Vue needs `isCustomElement` for raw tags, and function props only work on the wrapper or as element properties.
 
 ## Styling hooks
 
@@ -113,3 +122,15 @@ Root: `.aai` (the `<ask-ai>` element itself) with `data-variant`, `data-shape`, 
 Override in 3 tiers: (1) set `--aai-*` anywhere; (2) target the classes with TWO classes: base rules are scoped like `.aai__list .aai__btn`, `.aai__form .aai__input`, `.aai .aai__trigger` (specificity <= 0,2,0) and state rules like `.aai__list .aai__btn:hover` go up to 0,3,0, no `!important`, so host rules on bare elements (`a:hover`, `.prose a`, `input[type=text]:hover`, `button:hover`, `svg`) do not leak in; override with e.g. `.my-site .aai__btn {}`; (3) `unstyled` (skip the stylesheet). The `<style>` is prepended to `<head>`.
 Custom properties: `--aai-gap` (8px), `--aai-btn-size` (36px), `--aai-icon-size` (18px), `--aai-radius` (999px), `--aai-bg` (#f1f1f3), `--aai-bg-hover`, `--aai-fg` (#1a1a1a), `--aai-border`, `--aai-shadow`, `--aai-label-color`, `--aai-font`, `--aai-font-size`, `--aai-focus`, `--aai-transition`, `--aai-line`, `--aai-tint`, `--aai-input-bg`, `--aai-input-fg`, `--aai-brand` (set per button from the service color).
 Custom preset: add `.aai[data-variant="mine"] { --aai-bg: ...; --aai-fg: ...; }` and use `variant="mine"`.
+
+## Docs
+
+- [README](https://cdn.jsdelivr.net/npm/ask-ai-widget@0/README.md): full reference, options table, styling, FAQ
+- [Live demo](https://acler.cz/ask-ai/) and [Playground](https://acler.cz/ask-ai/playground): see every option working, copy a ready snippet
+- [CDN build](https://cdn.jsdelivr.net/npm/ask-ai-widget@0/dist/ask-ai.min.js): one file, global `AskAI`, defines `<ask-ai>`
+- [Examples](https://github.com/agilek/ask-ai-widget/tree/main/examples): Next.js, Vite React, Vue, SvelteKit, Astro, plain HTML
+
+## Optional
+
+- [Source and issues](https://github.com/agilek/ask-ai-widget)
+- [Prompt composition](https://github.com/agilek/ask-ai-widget#prompt-composition): templates, placeholders, maxLength

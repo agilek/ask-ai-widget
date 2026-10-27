@@ -1,6 +1,13 @@
 # ask-ai-widget
 
-**"Ask AI about this page" in one tag.** A tiny button row that opens ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral or DeepSeek in a new tab with a prefilled prompt. No backend, no tracking, no dependencies.
+**"Ask AI about this page" buttons in one tag.** A row of ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral and DeepSeek buttons (also called "Open in ChatGPT", "Summarize with AI" or AI share buttons). Each opens the assistant in a new tab with a prompt about the current page. No backend, no API keys, no tracking, zero dependencies.
+
+- **Any site:** one `<script>` + `<ask-ai>` tag in plain HTML, WordPress, Webflow, Shopify or Ghost; components for React/Next.js, Vue/Nuxt and Svelte/SvelteKit.
+- **Small:** 12.16 kB gzip for the CDN build with all 7 logos, from 7.55 kB with the lite entry.
+- **Real links:** `<a href>` that work with middle-click and SSR; clipboard fallback for Gemini and DeepSeek, which ignore URL prefill.
+- **Accessible and themeable:** keyboard and screen-reader support, `--aai-*` CSS variables, light/dark.
+- **See it first:** [live demo](https://acler.cz/ask-ai/) and [playground](https://acler.cz/ask-ai/playground), no install needed.
+- **Not a chatbot:** it answers nothing on your site and calls no AI API; it hands the page to the visitor's own assistant.
 
 ![ask-ai-widget](docs/screenshot.png)
 
@@ -9,7 +16,9 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/types-included-3178c6)](#api-reference)
 
-**[Try the playground](demo/playground.html)** - configure the widget live, see the exact prompt it sends, and copy the snippet for HTML, vanilla JS, React, Vue or Svelte.
+### 👉 [Live demo](https://acler.cz/ask-ai/) · [Playground](https://acler.cz/ask-ai/playground) · [Gallery](https://acler.cz/ask-ai/gallery)
+
+The **playground** configures the widget live, shows the exact prompt it sends and gives you the snippet for HTML, vanilla JS, React, Vue or Svelte. The **gallery** shows every variant, shape, menu and question-field layout on light and dark backgrounds.
 
 ## Quick start in 30 seconds
 
@@ -296,7 +305,7 @@ The text sent is assembled from four parts and a template.
 | --- | --- | --- |
 | Instructions | `instructions` | none |
 | Prompt | `prompt` | `{question}` with `input`, otherwise `Explain this page.` |
-| Context | `context` | `Context: {title} — {url}` (just the URL if there is no title). `false` disables |
+| Context | `context` | `Context: {title} — {url}` (`Context: {url}` if there is no title). `false` disables |
 | References | `references` | none. Renders as `Use these sources:` and one `- url` line per entry |
 
 They are joined with the `template`, default `{instructions}\n\n{prompt}\n\n{context}\n\n{references}`. Empty parts vanish and runs of blank lines collapse.
@@ -346,7 +355,7 @@ mount("#w", {
 The text sent to Claude (`https://claude.ai/new?q=` + URL-encoded text):
 
 ```text
-You are a helpful support engineer. Answer concisely.
+You are a helpful Example support engineer. Answer concisely.
 
 Explain this page to a beginner.
 
@@ -357,7 +366,7 @@ Use these sources:
 - https://example.com/docs/api
 ```
 
-Preview any configuration without clicking: `AskAI.buildPrompt(opts, AskAI.getContext(opts, question, serviceKey))` (the same functions are exported from `ask-ai-widget`), or use the [playground](demo/playground.html).
+Preview any configuration without clicking: `AskAI.buildPrompt(opts, AskAI.getContext(opts, question, serviceKey))` (the same functions are exported from `ask-ai-widget`), or use the [playground](https://acler.cz/ask-ai/playground).
 
 ## Services
 
@@ -473,7 +482,7 @@ Markup (identical in every renderer):
 | `--aai-menu-radius` | `min(radius, 14px)` | panel radius (items use `min(radius, 10px)`) |
 | `--aai-menu-z` | `1000` | z-index |
 
-Hover and focus rows use `--aai-tint`. The panel is at least 200px wide. With `prefers-reduced-motion` the transitions are off.
+Hovered rows use `--aai-bg-hover` if set, else `--aai-tint`; the keyboard-focused row shows the `--aai-focus` ring. The panel is at least 200px wide. With `prefers-reduced-motion` the transitions are off.
 
 ## Label position
 
@@ -590,24 +599,24 @@ Set any of these anywhere (see [Styling](#styling)). They are never declared by 
 | `--aai-gap` | `8px` | space between items |
 | `--aai-btn-size` | `36px` (`sm` 28, `lg` 44) | button width/height |
 | `--aai-icon-size` | `18px` (`sm` 14, `lg` 22) | logo size |
-| `--aai-radius` | `999px` (`rounded` 10px, `square` 4px) | button radius (the input uses `min(radius, 18px)`) |
+| `--aai-radius` | `999px` (`rounded` 10px, `square` 4px) | button radius (a `multiline` textarea uses `min(radius, 18px)`) |
 | `--aai-bg` | `#f1f1f3` | button background |
 | `--aai-bg-hover` | `#e5e5e9` | button hover background |
 | `--aai-fg` | `#1a1a1a` | logo and text color |
 | `--aai-border` | `transparent` | button border color |
 | `--aai-shadow` | `none` | button box-shadow |
-| `--aai-label-color` | `#6b6b70` | label and hint color |
+| `--aai-label-color` | `#6b6b70` | label, hint and placeholder color |
 | `--aai-font` | `inherit` | font family |
 | `--aai-font-size` | `14px` | base font size |
 | `--aai-focus` | `#2f6df6` | focus ring color |
 | `--aai-transition` | `.15s ease` | hover transition |
-| `--aai-line` | `#d4d4d9` | input border, outline variant border |
+| `--aai-line` | `#d4d4d9` | outline variant border, input border in outline/ghost, menu panel border |
 | `--aai-tint` | `rgba(0,0,0,.06)` | hover tint of `outline` and `ghost` |
 | `--aai-input-bg` / `--aai-input-fg` | the button fill / text color of the variant (`--aai-bg` / `--aai-fg`) | built-in input colors; the field otherwise follows the buttons |
 | `--aai-menu-bg`, `--aai-menu-fg`, `--aai-menu-border`, `--aai-menu-shadow`, `--aai-menu-radius`, `--aai-menu-z` | see [Dropdown menu](#dropdown-menu) | dropdown panel |
 | `--aai-brand` | set per button from the service `color` | color of logos in `variant="brand"` |
 
-Dark theme (`data-theme="dark"`, or `auto` with a dark OS) changes the defaults: `--aai-bg` to `#2a2a2e`, `--aai-bg-hover` to `#38383d`, `--aai-fg` to `#f2f2f2`, `--aai-label-color` to `#9a9aa0`, `--aai-line` to `#46464c`, `--aai-tint` to `rgba(255,255,255,.1)`, the input to `#1c1c1e` / `#f2f2f2`, and `--aai-focus` to `#6ea0ff`. `solid` is `#111` on white (inverted in dark); `outline` and `ghost` are transparent. Your own `--aai-*` values still win over all of these.
+Dark theme (`data-theme="dark"`, or `auto` with a dark OS) changes the defaults: `--aai-bg` to `#2a2a2e`, `--aai-bg-hover` to `#38383d`, `--aai-fg` to `#f2f2f2`, `--aai-label-color` to `#9a9aa0`, `--aai-line` to `#46464c`, `--aai-tint` to `rgba(255,255,255,.1)`, the menu panel to `#1c1c1e` / `#f2f2f2` (the input keeps following the button fill), and `--aai-focus` to `#6ea0ff`. `solid` is `#111` on white (inverted in dark); `outline` and `ghost` are transparent. Your own `--aai-*` values still win over all of these.
 
 ### Add your own preset
 
@@ -767,7 +776,7 @@ All entries share the types below. Import them from any entry (`import type { As
 
 ### `ask-ai-widget/element` (and `lite/element`)
 
-Importing registers `<ask-ai>`. Exports `AskAIElement`, `defineAskAI(tag = "ask-ai")` (idempotent, SSR-safe; use it to register another tag name), `parseAttrs(el, prefix?)`, and the type `AskAIElementCore`. Both the default and lite entries define the **same** tag; whichever is imported first wins, so use one of them per page.
+Importing registers `<ask-ai>`. Exports `AskAIElement`, `defineAskAI(tag = "ask-ai")` (idempotent, SSR-safe). For another tag name register a subclass: `customElements.define("my-ask", class extends AskAIElement {})`, `parseAttrs(el, prefix?)`, and the type `AskAIElementCore`. Both the default and lite entries define the **same** tag; whichever is imported first wins, so use one of them per page.
 
 ### `ask-ai-widget/react` (and `lite/react`)
 
@@ -804,7 +813,7 @@ The widget makes **no network requests** and has no analytics, cookies or storag
 
 ## Browser support
 
-Evergreen browsers (ES2019 output, custom elements for `<ask-ai>`, CSS custom properties and `min()`: Chrome/Edge 79+, Firefox 75+, Safari 11.1+). The focus ring uses `:focus-visible`; browsers without it keep their default ring. The `mount`, React, Vue and Svelte paths do not need custom elements.
+Evergreen browsers (ES2019 output, custom elements for `<ask-ai>`, CSS custom properties and `min()`: Chrome/Edge 79+, Firefox 75+, Safari 12.1+). The question-field layout uses `:has()` and container queries (Chrome 105+, Safari 16+, Firefox 121+); older browsers get a plain wrapping row. The focus ring uses `:focus-visible`; browsers without it keep their default ring. The `mount`, React, Vue and Svelte paths do not need custom elements.
 
 ## FAQ and troubleshooting
 
@@ -816,13 +825,13 @@ Evergreen browsers (ES2019 output, custom elements for `<ask-ai>`, CSS custom pr
 
 **My `className` on `<ask-ai>` does nothing.** The element's own `className` is the browser's. Use the `class-name` attribute for the widget option, or just `class`.
 
-**`unknown service "claude"` / nothing renders with `ask-ai-widget/lite`.** Lite entries do not bundle logos. Pass objects: `import { claude } from "ask-ai-widget/services"`.
+**`Unknown service "claude"` / nothing renders with `ask-ai-widget/lite`.** Lite entries do not bundle logos. Pass objects: `import { claude } from "ask-ai-widget/services"`.
 
 **The element is not upgraded / does nothing.** Load the CDN script or `import "ask-ai-widget/element"` once. Importing both the default and the lite element defines the same tag twice; the first wins.
 
 **My CSS variables have no effect.** Set the public `--aai-*` names (see the table in [Styling](#styling)); they work on `:root`, on any ancestor, on the widget or inline. Do not set the private `--_*` ones, they are an implementation detail. Also check that the name is spelled exactly as in the table.
 
-**The buttons have the wrong color.** The widget's button rule is one class, so it beats `a { color: ... }` and `a:hover`. A rule such as `a:visited { color: ... }` or `.prose a { color: ... }` is more specific; set `--aai-fg` (or `--aai-bg`) anywhere, or scope your link rule.
+**The buttons have the wrong color.** The widget's link rules are scoped one class deeper (`.aai__list .aai__btn`, states up to specificity (0,3,0)), so host rules such as `a:visited`, `.prose a` or `a:hover` do not reach them. A host rule with two classes plus a state can; set `--aai-fg` / `--aai-bg` (they always win) or scope your rule.
 
 **A placeholder shows up empty.** Unknown `{names}` expand to nothing. Check spelling, or define the value in `vars`.
 
@@ -847,7 +856,7 @@ npm run check:contrast   # Chromium state matrix: contrast of text, placeholder 
 node scripts/compact-icons.mjs   # regenerate src/icons.ts from scripts/icons-src/*.svg
 ```
 
-Run the playground from the repo root with any static server, for example `npx http-server .`, then open `/demo/`.
+The demo, playground and gallery live on <https://acler.cz/ask-ai/> (they load the published package from the CDN). Runnable framework examples are in [`examples/`](examples).
 
 ## License
 

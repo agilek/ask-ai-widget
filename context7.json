@@ -1,0 +1,26 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "ask-ai-widget",
+  "description": "Zero-dependency \"Ask AI about this page\" button row that opens ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral or DeepSeek with a prefilled prompt. <ask-ai> web component, CDN script, React, Vue and Svelte.",
+  "excludeFolders": [
+    "src",
+    "test",
+    "scripts",
+    "dist",
+    "demo",
+    ".github",
+    ".claude"
+  ],
+  "excludeFiles": [
+    "AGENTS.md",
+    "DEVLOG.md",
+    "NOTICE"
+  ],
+  "rules": [
+    "Read llms.txt for the import per framework: CDN script or ask-ai-widget/element for plain HTML, ask-ai-widget/react, ask-ai-widget/vue, ask-ai-widget/svelte.",
+    "Prompt options are strings or synchronous functions, never async.",
+    "The lite entries have no built-in services: pass objects imported from ask-ai-widget/services.",
+    "With SSR import ask-ai-widget/style.css once and pass page={{ url, title }}.",
+    "Style with --aai-* custom properties or the variant/size/shape/theme options; never copy the library CSS."
+  ]
+}

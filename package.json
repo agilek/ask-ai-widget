@@ -1,9 +1,9 @@
 {
   "name": "ask-ai-widget",
   "version": "0.1.0",
-  "description": "Tiny zero-dependency \"Ask AI about this page\" button row: opens ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral and DeepSeek with a prefilled prompt. Web component, React, Vue and Svelte.",
+  "description": "\"Ask AI about this page\" buttons: open ChatGPT, Claude, Perplexity, Gemini, Grok, Mistral or DeepSeek with a prefilled prompt. One script tag or React, Vue, Svelte. Zero dependencies, no tracking.",
   "license": "MIT",
-  "homepage": "https://github.com/agilek/ask-ai-widget#readme",
+  "homepage": "https://acler.cz/ask-ai/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/agilek/ask-ai-widget.git"
@@ -13,7 +13,14 @@
   },
   "keywords": [
     "ask-ai",
-    "ai",
+    "ask-ai-button",
+    "ai-button",
+    "ai-share-buttons",
+    "share-to-ai",
+    "open-in-chatgpt",
+    "summarize-with-ai",
+    "chatgpt-button",
+    "claude-button",
     "chatgpt",
     "claude",
     "perplexity",
@@ -22,15 +29,20 @@
     "mistral",
     "deepseek",
     "llm",
-    "share",
+    "documentation",
+    "docs",
     "web-component",
     "custom-element",
     "react",
+    "nextjs",
     "vue",
+    "nuxt",
     "svelte",
+    "sveltekit",
+    "astro",
+    "wordpress",
     "widget",
-    "prompt",
-    "llms-txt"
+    "cdn"
   ],
   "type": "module",
   "sideEffects": [
@@ -42,6 +54,8 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "unpkg": "./dist/ask-ai.min.js",
+  "jsdelivr": "./dist/ask-ai.min.js",
   "files": [
     "dist",
     "style.css",
@@ -163,7 +177,8 @@
       }
     },
     "./style.css": "./style.css",
-    "./style-row.css": "./style-row.css"
+    "./style-row.css": "./style-row.css",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "tsup && node scripts/build-css.mjs",
@@ -201,5 +216,8 @@
     "typescript": "^5.9.3",
     "vitest": "^5.0.5",
     "vue": "^3.5.44"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
